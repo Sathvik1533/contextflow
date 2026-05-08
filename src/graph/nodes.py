@@ -8,6 +8,7 @@ Each node is a function that:
 LangGraph automatically merges the returned dict into the state.
 """
 
+from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
 from src.graph.state import ContextFlowState
 
@@ -40,5 +41,40 @@ def capture_node(state: ContextFlowState) -> dict:
         # If capture fails, set error and let error_node handle it
         return {
             "error": f"Screen capture failed: {str(e)}",
+            "should_continue": False,
+        }
+
+
+
+def observer_node(state: ContextFlowState) -> dict:
+    """Analyze the screenshot using Gemini Vision.
+    
+    This node:
+    - Reads screenshot_b64 from state
+    - Calls Gemini Vision API via run_observer()
+    - Writes extracted_context to state
+    - If confidence < 0.6, could trigger re-capture (handled by edge logic)
+    
+    Args:
+        state: Current graph state with screenshot_b64 populated
+    
+    Returns:
+        dict with extracted_context key (or error if API fails)
+    """
+    try:
+        screenshot_b64 = state["screenshot_b64"]
+        
+        # Call Gemini Vision
+        extracted_context = run_observer(screenshot_b64)
+        
+        return {
+            "extracted_context": extracted_context,
+            "error": None,  # Clear any previous errors
+        }
+    
+    except Exception as e:
+        # If Observer fails, set error and let error_node handle it
+        return {
+            "error": f"Observer failed: {str(e)}",
             "should_continue": False,
         }
