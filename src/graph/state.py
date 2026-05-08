@@ -4,7 +4,7 @@ This TypedDict defines the shared state passed between all nodes in the graph.
 Each node reads from and writes to this state object.
 """
 
-from typing import Optional, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class ContextFlowState(TypedDict):
@@ -20,6 +20,31 @@ class ContextFlowState(TypedDict):
     
     capture_timestamp: str
     """ISO 8601 timestamp of when the screenshot was taken."""
+    
+    user_intent: str
+    """What the user is trying to learn right now.
+    
+    Captured at session start via CLI prompt: "What are you trying to learn?"
+    Can be empty string if user presses Enter to skip.
+    Used by Guide to personalize responses.
+    
+    Examples:
+    - "learning React hooks"
+    - "debugging authentication error"
+    - "understanding LangGraph state management"
+    - "" (skipped)
+    """
+    
+    session_history: List[dict]
+    """Last 3 extracted_context dicts from previous captures.
+    
+    Allows Guide to see patterns across multiple screens:
+    - User looked at 3 different auth tutorials → suggest comparison
+    - Same error appeared twice → suggest deeper investigation
+    - Jumping between unrelated topics → suggest focus
+    
+    Limited to 3 to avoid token bloat. Oldest entries are dropped.
+    """
     
     # --- Observer Layer (observer_node writes) ---
     extracted_context: dict

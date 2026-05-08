@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=0.2.0",
-    "langchain-groq>=0.2.0",
+    "langchain-groq>=0.2.0",  # Groq for fast inference (Llama 3.2 Vision + Llama 3.3 Text)
     "langchain-core>=0.3.0",
     "mss>=9.0.0",
     "Pillow>=10.0.0",
