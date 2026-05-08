@@ -16,7 +16,7 @@ Paste into any LLM (ChatGPT, Claude, Gemini) — zero re-explanation needed.
 ## Tech Stack
 
 - **Agent Framework:** LangGraph + LangChain
-- **LLM:** Google Gemini 2.0 Flash (Vision + Text)
+- **LLM:** Groq (Llama 3.2 11B Vision + Llama 3.3 70B)
 - **Screen Capture:** mss + Pillow
 - **CLI:** rich + pynput
 - **Platform:** macOS M1 (primary)
