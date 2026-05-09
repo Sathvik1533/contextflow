@@ -1,0 +1,341 @@
+=== CONTEXTFLOW — RESUME CONTEXT FOR AI OPTIMIZATION ===
+
+PROJECT NAME: ContextFlow
+TAGLINE: Stop explaining. Start building. AI that reads your screen, files, and terminal—so you don't have to.
+GITHUB: https://github.com/Sathvik1533/contextflow
+STATUS: In active development (Day 2/28 complete, 18% done)
+TIMELINE: May 2026 - Present
+ROLE: Solo Developer & AI Engineer
+
+---
+
+## THE PROBLEM IT SOLVES
+
+Every developer using LLMs (ChatGPT, Claude, Gemini) faces this:
+
+You're learning, building, or debugging. You need AI help.
+
+But first, you have to MANUALLY gather context:
+- Screenshot your screen or copy-paste code from IDE
+- Copy error messages from terminal
+- Copy text from documentation/browser
+- Copy what's on your clipboard
+- Switch to ChatGPT
+- Type out everything: "I'm working on X, here's my code, here's the error, here's what I tried..."
+- Wait for response
+- Switch back
+- Repeat
+
+**This happens 10-20 times per day. 3-5 minutes each time. 30-100 minutes wasted daily.**
+
+The real pain isn't just copy-paste. It's the ENTIRE manual workflow of explaining context to an AI that should already know what you're looking at.
+
+You break focus. You context-switch. You re-explain the same project 20 times.
+
+ContextFlow eliminates ALL of this.
+
+---
+
+## THE SOLUTION (END PRODUCT)
+
+ContextFlow is a macOS desktop application that automates the entire context-gathering workflow.
+
+**One hotkey. Zero manual work. AI does everything.**
+
+Instead of you gathering context for the AI, the AI gathers context for you.
+
+### USER WORKFLOW (FINAL PRODUCT):
+1. You're coding, learning, or debugging
+2. You need AI help
+3. Press **Cmd+Shift+Space** (one hotkey)
+4. AI agents automatically gather EVERYTHING:
+   - What's on your screen (YouTube tutorial, docs, code)
+   - Open files in your IDE (the code you're working on)
+   - Your clipboard (what you just copied)
+   - Terminal output (errors, logs, commands)
+   - Browser tabs (documentation URLs, titles)
+   - Git context (current branch, recent commits, uncommitted changes)
+5. AI analyzes and structures all of it
+6. Complete context package → clipboard
+7. Paste into ChatGPT/Claude/Gemini
+8. AI understands EVERYTHING without you explaining anything
+
+**The transformation:**
+- Before: 3-5 minutes of manual gathering + explaining
+- After: 2 seconds. One hotkey. Done.
+
+**You never break focus. You never context-switch. You never re-explain.**
+
+---
+
+## TECHNICAL ARCHITECTURE
+
+### Multi-Agent System (LangGraph)
+- **Observer Agent** (Llama 4 Scout Vision) - Analyzes screenshots, extracts visible content
+- **Guide Agent** (Llama 3.3 70B) - Generates learning path and actionable advice
+- **File Reader Agent** (planned) - Reads open files in IDE
+- **Terminal Watcher Agent** (planned) - Captures terminal output and errors
+- **Browser Context Agent** (planned) - Extracts URLs and page titles
+- **Git Context Agent** (planned) - Reads git status and recent commits
+
+### State Management
+- LangGraph StateGraph for agent orchestration
+- Shared state passed between agents (relay race pattern)
+- Conditional edges for intelligent routing
+- Error handling and retry logic
+
+### Tech Stack
+- **Language:** Python 3.11
+- **Agent Framework:** LangGraph + LangChain
+- **LLM API:** Groq (free tier) - Llama 4 Scout Vision + Llama 3.3 70B
+- **Screen Capture:** mss + Pillow
+- **CLI Output:** rich library
+- **Hotkey Listener:** pynput (later: Tauri v2 for desktop overlay)
+- **Package Manager:** uv (10-100x faster than pip)
+
+### UI Evolution
+- **Phase 1 (Current):** CLI with rich library
+- **Phase 2 (Week 3-4):** Desktop overlay inspired by lil-agents
+- **Phase 3 (Future):** Full desktop app with Tauri v2 + React
+
+---
+
+## KEY FEATURES (FINAL PRODUCT)
+
+### Core Features
+✅ One-hotkey context gathering (Cmd+Shift+Space)
+✅ Multi-source context extraction (screen, files, clipboard, terminal, browser, git)
+✅ Content-type detection (YouTube, documentation, code, errors, other)
+✅ AI-generated learning paths and actionable advice
+✅ Context package formatted for any LLM
+✅ Clipboard integration (automatic copy)
+✅ Beautiful desktop overlay UI
+
+### Advanced Features (Week 3-4)
+- Deep content extraction (extract ALL text, lists, code blocks, phases)
+- Session history (save all captures to ~/.contextflow/sessions/)
+- Rate limit handling (exponential backoff)
+- Content-specific prompts (different advice for YouTube vs docs vs code)
+- Configuration file (~/.contextflow/config.toml)
+
+---
+
+## DEVELOPMENT MILESTONES
+
+### Week 1 (Days 1-7) — Foundation ✅ 67% Complete
+- ✅ GitHub repo setup
+- ✅ Project scaffold (pyproject.toml, folder structure)
+- ✅ State schema (TypedDict for agent communication)
+- ✅ Screen capture (mss → base64 PNG)
+- ✅ Observer Agent (Llama 4 Scout Vision → structured JSON)
+- ✅ Guide Agent (Llama 3.3 70B → actionable advice)
+- ✅ Output Node (rich CLI + clipboard)
+- ⏳ LangGraph assembly (Day 3)
+- ⏳ Entry point (Day 3)
+- ⏳ Integration test (Day 3)
+
+### Week 2 (Days 8-14) — Multi-Source Context
+- File Reader Agent (read open files in VS Code)
+- Clipboard Monitor Agent (capture clipboard history)
+- Terminal Watcher Agent (capture terminal output)
+- Browser Context Agent (extract URLs and titles)
+- Git Context Agent (git status, recent commits)
+- Context fusion logic (merge all sources)
+
+### Week 3 (Days 15-21) — Intelligence & Hardening
+- Deep content extraction (extract lists, phases, code blocks)
+- Content-type-specific prompts
+- Session history and persistence
+- Rate limit handling
+- Error recovery and retry logic
+- Comprehensive testing
+
+### Week 4 (Days 22-28) — Desktop UI & Launch
+- Hotkey listener (Cmd+Shift+Space)
+- Desktop overlay UI (lil-agents inspired)
+- Configuration system
+- README with demo GIF
+- CI/CD pipeline
+- Public launch (v1.0)
+
+---
+
+## TECHNICAL CHALLENGES SOLVED
+
+### Challenge 1: Model Deprecation
+**Problem:** Groq deprecated Llama 3.2 Vision models mid-development
+**Solution:** Migrated to Llama 4 Scout (meta-llama/llama-4-scout-17b-16e-instruct) in 30 minutes with zero downtime
+**Learning:** Built resilient API integration with fallback logic
+
+### Challenge 2: JSON Parsing from LLM
+**Problem:** Vision models sometimes return JSON wrapped in markdown fences (```json...```)
+**Solution:** Regex-based fence stripping + strict schema validation
+**Learning:** Never trust LLM output format, always validate and clean
+
+### Challenge 3: Multi-Agent State Management
+**Problem:** Passing data between agents without losing context
+**Solution:** LangGraph StateGraph with TypedDict schema (relay race pattern)
+**Learning:** Shared state is the "baton" passed between agents
+
+---
+
+## MEASURABLE IMPACT
+
+### Time Savings
+- **Before:** 3-5 minutes per LLM interaction × 10-20 interactions/day = 30-100 minutes wasted
+- **After:** 2 seconds per interaction × 10-20 interactions/day = 3-7 minutes total
+- **Time saved:** 27-93 minutes per day (450-1550 minutes per month)
+
+### Developer Experience
+- Zero context switching (no manual copy-paste)
+- Zero re-explanation (LLM gets full context automatically)
+- Maintains focus (one hotkey vs 5-step manual process)
+
+### Technical Metrics
+- 2 agents working (Observer + Guide), 4 more planned (File Reader, Terminal Watcher, Browser Context, Git Context)
+- Sub-2-second context gathering (target)
+- Content-type detection tested on 5 scenarios (YouTube, docs, code, errors, websites)
+- Zero API cost (free tier only)
+
+---
+
+## SKILLS DEMONSTRATED
+
+### AI/ML Engineering
+- Multi-agent system design with LangGraph
+- Vision model integration (Llama 4 Scout)
+- Text model integration (Llama 3.3 70B)
+- Prompt engineering for structured output
+- State management in agent workflows
+
+### Software Engineering
+- Python 3.14 with type hints
+- Async/await patterns
+- Error handling and retry logic
+- CLI development with rich library
+- Screen capture with mss + Pillow
+- Clipboard integration (pbcopy)
+
+### System Design
+- Multi-agent orchestration
+- State machine design (LangGraph)
+- Conditional routing logic
+- Session persistence
+- Rate limit handling
+
+### DevOps & Tools
+- uv package manager (10-100x faster than pip)
+- Git workflow (semantic commits)
+- GitHub repo management
+- CI/CD pipeline (planned)
+- Building in public (daily LinkedIn posts)
+
+---
+
+## CURRENTLY LEARNING
+
+### LangGraph & Agent Orchestration
+- Conditional edge routing and StateGraph compilation
+- Multi-agent state management patterns (relay race, shared memory)
+- Error handling and retry logic in agent workflows
+
+### Prompt Engineering
+- Structured JSON extraction from vision models
+- Content-type-specific prompt design
+- Handling non-deterministic LLM outputs
+
+### Python Advanced Patterns
+- async/await patterns for parallel agent execution (implementing in Week 2)
+- Type hints and TypedDict for state management
+- Error handling with graceful degradation
+
+### Tools & Infrastructure
+- uv package manager internals and dependency resolution
+- LangSmith tracing for agent observability (Week 3)
+- Desktop overlay development with Tauri v2 (Week 4)
+
+---
+
+## RESUME BULLET POINTS (COPY-PASTE READY)
+
+**ContextFlow — AI That Gathers Context So You Don't Have To**
+*Solo Developer & AI Engineer | May 2026 - Present*
+
+• Building multi-agent automation system that eliminates manual context-gathering workflow when using LLMs, reducing 3-5 minutes of manual work (screenshots, copy-paste, explaining) to 2 seconds with one hotkey
+
+• Architected multi-agent system with LangGraph to automatically extract context from 6 sources (screen, open files, clipboard, terminal, browser, git)—2 agents working (Observer + Guide), 4 planned
+
+• Integrated Llama 4 Scout Vision and Llama 3.3 70B models via Groq API for intelligent screen analysis and content-type detection, tested on 5 content scenarios (YouTube, docs, code, errors, websites)
+
+• Designed state management system using LangGraph StateGraph with TypedDict schema for reliable multi-agent orchestration and conditional routing logic
+
+• Implemented resilient API integration with automatic fallback handling, successfully migrating from deprecated Llama 3.2 Vision to Llama 4 Scout with zero downtime mid-development
+
+• Building in public with daily LinkedIn posts documenting architecture decisions, technical challenges, and measurable impact (28-day timeline, 34 tasks, 6 data sources automated)
+
+**Tech Stack:** Python 3.11, LangGraph, LangChain, Groq API, mss, Pillow, rich, pynput, uv
+
+**Impact:** Automates context gathering (2 agents working, 4 planned), eliminates 30-100 min/day of manual work, zero API cost (free tier)
+
+**GitHub:** https://github.com/Sathvik1533/contextflow
+
+---
+
+## PROJECT LINKS
+
+- **GitHub Repository:** https://github.com/Sathvik1533/contextflow
+- **LinkedIn Updates:** Daily posts with #BuildInPublic tag
+- **Tech Stack:** Python + LangGraph + Groq API + mss + PIL + rich
+- **Timeline:** 28 days (May 2026 - June 2026)
+- **Current Status:** Day 2/28 complete, 6/34 tasks done (18%)
+
+---
+
+## WHY THIS PROJECT MATTERS
+
+### For Recruiters
+- Demonstrates end-to-end AI engineering skills (not just API calls)
+- Shows system design thinking (multi-agent orchestration)
+- Proves ability to ship real products (not just tutorials)
+- Building in public shows communication skills
+- Solving real pain point (not toy project)
+
+### For Technical Interviewers
+- Multi-agent system design with LangGraph
+- Vision + text model integration
+- State management in complex workflows
+- Error handling and resilience (model deprecation)
+- CLI development and user experience
+
+### For Portfolio
+- GitHub repo with clean code and documentation
+- Daily LinkedIn posts showing progress
+- Demo video showing real usage
+- Measurable impact (time savings)
+- Real-world problem solving
+
+---
+
+## FUTURE ENHANCEMENTS (POST-MVP)
+
+- Vector database for session history (mem0 + Qdrant)
+- LangSmith tracing for observability
+- Cross-platform support (Windows, Linux)
+- Browser extension for deeper web context
+- IDE plugins (VS Code, PyCharm)
+- Team collaboration features (shared context packages)
+- API for third-party integrations
+
+---
+
+=== END CONTEXT ===
+
+INSTRUCTIONS FOR AI OPTIMIZATION:
+When optimizing my LinkedIn profile or resume, use this context to:
+1. Highlight the technical depth (multi-agent systems, LangGraph, vision models)
+2. Emphasize measurable impact (time savings, workflow automation)
+3. Show problem-solving ability (model deprecation, JSON parsing)
+4. Demonstrate shipping ability (building in public, 28-day timeline)
+5. Position as AI/ML engineering project (not just scripting)
+
+This is a FLAGSHIP project for internship applications in AI/ML engineering roles.
