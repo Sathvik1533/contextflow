@@ -8,6 +8,7 @@ Each node is a function that:
 LangGraph automatically merges the returned dict into the state.
 """
 
+from src.agents.guide import run_guide
 from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
 from src.graph.state import ContextFlowState
@@ -84,5 +85,50 @@ def observer_node(state: ContextFlowState) -> dict:
         # If Observer fails, set error and let error_node handle it
         return {
             "error": f"Observer failed: {str(e)}",
+            "should_continue": False,
+        }
+
+
+
+def guide_node(state: ContextFlowState) -> dict:
+    """Guide Agent: Generate actionable advice from Observer's context.
+    
+    This node:
+    - Reads extracted_context from state
+    - Reads user_intent from state (optional)
+    - Sends to Groq Text API (llama-3.3-70b-versatile)
+    - Generates summary, learning path, questions, context package
+    - Writes guidance to state
+    
+    Args:
+        state: Current graph state with extracted_context field
+    
+    Returns:
+        dict with guidance key (or error if API fails)
+    """
+    try:
+        # Get extracted context from state
+        extracted_context = state.get("extracted_context")
+        if not extracted_context:
+            return {
+                "error": "guide_node: No extracted_context in state",
+                "should_continue": False,
+            }
+        
+        # Get user intent (optional)
+        user_intent = state.get("user_intent", "")
+        
+        # Run the Guide agent
+        guidance = run_guide(extracted_context, user_intent)
+        
+        return {
+            "guidance": guidance,
+            "error": None,  # Clear any previous errors
+        }
+    
+    except Exception as e:
+        # If Guide fails, set error and let error_node handle it
+        return {
+            "error": f"Guide failed: {str(e)}",
             "should_continue": False,
         }
