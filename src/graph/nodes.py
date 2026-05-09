@@ -47,24 +47,32 @@ def capture_node(state: ContextFlowState) -> dict:
 
 
 def observer_node(state: ContextFlowState) -> dict:
-    """Analyze the screenshot using Gemini Vision.
+    """Observer Agent: Analyze screenshot and extract structured context.
     
     This node:
     - Reads screenshot_b64 from state
-    - Calls Gemini Vision API via run_observer()
+    - Sends to Groq Vision API (meta-llama/llama-4-scout-17b-16e-instruct)
+    - Parses response into structured JSON
     - Writes extracted_context to state
-    - If confidence < 0.6, could trigger re-capture (handled by edge logic)
+    
+    If confidence < 0.6, the graph will trigger a re-capture via conditional edge.
     
     Args:
-        state: Current graph state with screenshot_b64 populated
+        state: Current graph state with screenshot_b64 field
     
     Returns:
         dict with extracted_context key (or error if API fails)
     """
     try:
-        screenshot_b64 = state["screenshot_b64"]
+        # Get the screenshot from state
+        screenshot_b64 = state.get("screenshot_b64")
+        if not screenshot_b64:
+            return {
+                "error": "observer_node: No screenshot_b64 in state",
+                "should_continue": False,
+            }
         
-        # Call Gemini Vision
+        # Run the Observer agent
         extracted_context = run_observer(screenshot_b64)
         
         return {

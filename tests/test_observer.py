@@ -1,144 +1,135 @@
-"""Tests for Observer agent (Gemini Vision integration)."""
+"""Tests for Observer agent."""
 
 import json
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.agents.observer import _strip_markdown_fences, run_observer
+from src.agents.observer import run_observer
 
 
-def test_strip_markdown_fences_with_json_fence():
-    """Test stripping ```json fences."""
-    input_text = """```json
-{
-  "content_type": "youtube",
-  "title": "Test"
-}
-```"""
+class TestObserver:
+    """Test suite for Observer agent."""
     
-    result = _strip_markdown_fences(input_text)
-    
-    # Should be valid JSON now
-    parsed = json.loads(result)
-    assert parsed["content_type"] == "youtube"
-
-
-def test_strip_markdown_fences_with_plain_fence():
-    """Test stripping ``` fences without language specifier."""
-    input_text = """```
-{"content_type": "code"}
-```"""
-    
-    result = _strip_markdown_fences(input_text)
-    parsed = json.loads(result)
-    assert parsed["content_type"] == "code"
-
-
-def test_strip_markdown_fences_no_fences():
-    """Test that clean JSON passes through unchanged."""
-    input_text = '{"content_type": "documentation"}'
-    
-    result = _strip_markdown_fences(input_text)
-    
-    assert result == input_text
-
-
-def test_run_observer_valid_response():
-    """Test run_observer with a valid Gemini response."""
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "content_type": "youtube",
-        "title": "LangGraph Tutorial",
-        "primary_text": "Learn how to build multi-agent systems",
-        "code_blocks": [],
-        "error_messages": [],
-        "url_visible": "https://youtube.com/watch?v=abc",
-        "confidence": 0.92,
-    })
-    
-    with patch("src.agents.observer.ChatGoogleGenerativeAI") as mock_llm_class:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = mock_response
-        mock_llm_class.return_value = mock_llm
+    def test_valid_json_response(self):
+        """Observer should parse valid JSON response correctly."""
+        mock_response = MagicMock()
+        mock_response.content = json.dumps({
+            "content_type": "youtube",
+            "title": "LangGraph Tutorial",
+            "primary_text": "This video explains state management",
+            "code_blocks": ["def my_func(): pass"],
+            "error_messages": [],
+            "url_visible": "https://youtube.com/watch?v=abc123",
+            "confidence": 0.92,
+        })
         
-        result = run_observer("fake_base64_string", api_key="test_key")
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                result = run_observer("fake_base64_string")
+                
+                assert result["content_type"] == "youtube"
+                assert result["title"] == "LangGraph Tutorial"
+                assert result["confidence"] == 0.92
+                assert len(result["code_blocks"]) == 1
     
-    assert result["content_type"] == "youtube"
-    assert result["title"] == "LangGraph Tutorial"
-    assert result["confidence"] == 0.92
-
-
-def test_run_observer_with_markdown_fences():
-    """Test that run_observer handles markdown fences correctly."""
-    mock_response = MagicMock()
-    mock_response.content = """```json
+    def test_strips_markdown_fences(self):
+        """Observer should strip ```json fences from API response."""
+        mock_response = MagicMock()
+        # API sometimes returns markdown-wrapped JSON
+        mock_response.content = """```json
 {
-  "content_type": "code",
-  "title": "main.py",
-  "primary_text": "Python code visible",
-  "code_blocks": ["def main(): pass"],
+  "content_type": "documentation",
+  "title": "Python Docs",
+  "primary_text": "Learn Python",
+  "code_blocks": [],
   "error_messages": [],
   "url_visible": null,
-  "confidence": 0.88
+  "confidence": 0.85
 }
 ```"""
-    
-    with patch("src.agents.observer.ChatGoogleGenerativeAI") as mock_llm_class:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = mock_response
-        mock_llm_class.return_value = mock_llm
         
-        result = run_observer("fake_base64", api_key="test_key")
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                result = run_observer("fake_base64_string")
+                
+                assert result["content_type"] == "documentation"
+                assert result["confidence"] == 0.85
     
-    assert result["content_type"] == "code"
-    assert result["confidence"] == 0.88
-
-
-def test_run_observer_invalid_json():
-    """Test that run_observer raises ValueError on invalid JSON."""
-    mock_response = MagicMock()
-    mock_response.content = "This is not JSON, just prose explanation"
-    
-    with patch("src.agents.observer.ChatGoogleGenerativeAI") as mock_llm_class:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = mock_response
-        mock_llm_class.return_value = mock_llm
+    def test_invalid_json_raises_error(self):
+        """Observer should raise ValueError if API returns invalid JSON."""
+        mock_response = MagicMock()
+        mock_response.content = "This is not JSON at all"
         
-        with pytest.raises(ValueError, match="invalid JSON"):
-            run_observer("fake_base64", api_key="test_key")
-
-
-def test_run_observer_missing_required_fields():
-    """Test that run_observer raises ValueError if required fields missing."""
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "content_type": "youtube",
-        # Missing "title" and "confidence"
-    })
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                with pytest.raises(ValueError, match="invalid JSON"):
+                    run_observer("fake_base64_string")
     
-    with patch("src.agents.observer.ChatGoogleGenerativeAI") as mock_llm_class:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = mock_response
-        mock_llm_class.return_value = mock_llm
+    def test_missing_required_fields(self):
+        """Observer should raise ValueError if required fields are missing."""
+        mock_response = MagicMock()
+        mock_response.content = json.dumps({
+            "content_type": "code",
+            "title": "VS Code",
+            # Missing: primary_text, code_blocks, error_messages, url_visible, confidence
+        })
         
-        with pytest.raises(ValueError, match="missing required fields"):
-            run_observer("fake_base64", api_key="test_key")
-
-
-def test_run_observer_confidence_not_number():
-    """Test that run_observer raises ValueError if confidence is not a number."""
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "content_type": "youtube",
-        "title": "Test",
-        "confidence": "high",  # Should be a number
-    })
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                with pytest.raises(ValueError, match="missing required fields"):
+                    run_observer("fake_base64_string")
     
-    with patch("src.agents.observer.ChatGoogleGenerativeAI") as mock_llm_class:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = mock_response
-        mock_llm_class.return_value = mock_llm
+    def test_invalid_content_type(self):
+        """Observer should raise ValueError if content_type is invalid."""
+        mock_response = MagicMock()
+        mock_response.content = json.dumps({
+            "content_type": "invalid_type",  # Not in allowed list
+            "title": "Test",
+            "primary_text": "Test",
+            "code_blocks": [],
+            "error_messages": [],
+            "url_visible": None,
+            "confidence": 0.8,
+        })
         
-        with pytest.raises(ValueError, match="confidence must be a number"):
-            run_observer("fake_base64", api_key="test_key")
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                with pytest.raises(ValueError, match="Invalid content_type"):
+                    run_observer("fake_base64_string")
+    
+    def test_invalid_confidence_value(self):
+        """Observer should raise ValueError if confidence is not 0-1."""
+        mock_response = MagicMock()
+        mock_response.content = json.dumps({
+            "content_type": "code",
+            "title": "Test",
+            "primary_text": "Test",
+            "code_blocks": [],
+            "error_messages": [],
+            "url_visible": None,
+            "confidence": 1.5,  # Invalid: > 1.0
+        })
+        
+        with patch.dict("os.environ", {"GROQ_API_KEY": "fake_key"}):
+            with patch("src.agents.observer.ChatGroq") as mock_groq:
+                mock_groq.return_value.invoke.return_value = mock_response
+                
+                with pytest.raises(ValueError, match="Invalid confidence"):
+                    run_observer("fake_base64_string")
+    
+    def test_missing_api_key(self):
+        """Observer should raise ValueError if GROQ_API_KEY not set."""
+        with patch.dict("os.environ", {}, clear=True):
+            with pytest.raises(ValueError, match="GROQ_API_KEY not found"):
+                run_observer("fake_base64_string")

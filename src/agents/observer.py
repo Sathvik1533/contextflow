@@ -1,134 +1,153 @@
-"""Observer Agent — Gemini Vision analysis of screenshots.
+"""Observer Agent — Screen Analysis with Groq Vision API.
 
-This agent is the "eyes" of ContextFlow. It receives a base64 screenshot
-and returns structured JSON describing what's on screen.
+This agent receives a base64-encoded screenshot and returns structured JSON
+describing what's on screen: content type, title, code, errors, etc.
+
+The Observer's job: Turn pixels into structured data.
+
+Model: meta-llama/llama-4-scout-17b-16e-instruct (Llama 4 Scout with vision)
 """
 
 import json
 import os
+import re
+from typing import Any
 
 from langchain_core.messages import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 
-# Strict prompt to force JSON-only output
+
+# Strict JSON-only prompt — no prose, no markdown, just JSON
 OBSERVER_PROMPT = """You are a screen analysis agent. Analyze this screenshot and respond ONLY with valid JSON.
 
 CRITICAL RULES:
-- NO prose, NO markdown, NO explanation
-- NO code fences (no ```json or ```)
-- ONLY raw JSON object
-- If you cannot determine something, use null or empty array
+- Output ONLY raw JSON, no markdown fences, no explanation, no prose
+- Do NOT wrap in ```json or ``` 
+- Follow the exact schema below
 
-Required JSON schema:
+SCHEMA (you MUST match this exactly):
 {
   "content_type": "youtube" | "documentation" | "code" | "error" | "other",
-  "title": "page or video title visible on screen",
-  "primary_text": "main readable content, max 500 chars",
-  "code_blocks": ["list of code strings visible on screen"],
-  "error_messages": ["list of error or stack trace strings"],
-  "url_visible": "URL string if visible, otherwise null",
-  "confidence": 0.85
+  "title": "string — page/video title visible on screen",
+  "primary_text": "string — main readable content, max 500 chars",
+  "code_blocks": ["array of code strings visible on screen"],
+  "error_messages": ["array of error/stack trace strings visible"],
+  "url_visible": "string or null — any URL visible in browser/terminal",
+  "confidence": 0.0-1.0 — how confident you are in this analysis
 }
 
-confidence = how certain you are about content_type (0.0 to 1.0)
+CONTENT TYPE DEFINITIONS:
+- "youtube": YouTube video player visible
+- "documentation": Technical docs, tutorials, blog posts, README files
+- "code": IDE, code editor, terminal with code
+- "error": Error messages, stack traces, red text, exception logs
+- "other": Anything else (desktop, settings, blank screen)
 
-Examples:
-- YouTube video → content_type: "youtube", extract video title
-- Documentation page → content_type: "documentation", extract page heading
-- Code editor → content_type: "code", extract visible code
-- Error dialog → content_type: "error", extract error message
-- Blank/unclear → content_type: "other", confidence < 0.6
+CONFIDENCE SCORING:
+- 0.9-1.0: Very clear, can read text easily
+- 0.7-0.9: Mostly clear, some text readable
+- 0.5-0.7: Somewhat unclear, hard to read details
+- 0.0-0.5: Very unclear, blurry, or blank screen
 
-Respond with JSON only. Start with { and end with }."""
+Analyze the screenshot now. Output ONLY the JSON object."""
 
 
-def run_observer(screenshot_b64: str, api_key: str | None = None) -> dict:
-    """Analyze a screenshot using Gemini Vision and return structured JSON.
+def run_observer(screenshot_b64: str) -> dict[str, Any]:
+    """Run the Observer agent on a screenshot.
+    
+    This function:
+    1. Sends screenshot to Groq Vision API (meta-llama/llama-4-scout-17b-16e-instruct)
+    2. Receives response (might have markdown fences)
+    3. Strips fences if present
+    4. Parses JSON
+    5. Validates schema
     
     Args:
-        screenshot_b64: Base64-encoded PNG screenshot
-        api_key: Google AI Studio API key (if None, reads from GOOGLE_API_KEY env var)
+        screenshot_b64: Base64-encoded PNG string
     
     Returns:
-        dict matching the Observer schema with keys:
-            - content_type: str
-            - title: str
-            - primary_text: str
-            - code_blocks: list[str]
-            - error_messages: list[str]
-            - url_visible: str | None
-            - confidence: float
+        dict matching the Observer schema:
+        {
+            "content_type": str,
+            "title": str,
+            "primary_text": str,
+            "code_blocks": List[str],
+            "error_messages": List[str],
+            "url_visible": str | None,
+            "confidence": float
+        }
     
     Raises:
         ValueError: If API returns invalid JSON or missing required fields
-        Exception: If API call fails (auth, rate limit, etc.)
+        Exception: If API call fails
     """
-    # Initialize Gemini Vision model
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-exp",
-        google_api_key=api_key or os.getenv("GOOGLE_API_KEY"),
+    # Initialize Groq Vision model
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found in environment")
+    
+    llm = ChatGroq(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",  # Updated: Llama 4 Scout with vision support
+        api_key=api_key,
+        temperature=0.1,  # Low temperature = more consistent JSON output
     )
     
-    # Construct message with text prompt + image
+    # Build the message with text prompt + image
+    # Groq Vision expects: HumanMessage with content=[text_dict, image_dict]
     message = HumanMessage(
         content=[
             {"type": "text", "text": OBSERVER_PROMPT},
             {
                 "type": "image_url",
-                "image_url": f"data:image/png;base64,{screenshot_b64}",
+                "image_url": {"url": f"data:image/png;base64,{screenshot_b64}"},
             },
         ]
     )
     
-    # Call Gemini Vision
+    # Call the API
     response = llm.invoke([message])
-    raw_output = response.content.strip()
+    raw_content = response.content
     
-    # Strip markdown code fences if present (Gemini sometimes adds them)
-    cleaned = _strip_markdown_fences(raw_output)
+    # Strip markdown fences if present (API sometimes returns ```json...```)
+    # Pattern: ```json\n{...}\n``` or ```{...}```
+    cleaned = re.sub(r"^```(?:json)?\s*\n?", "", raw_content.strip())
+    cleaned = re.sub(r"\n?```$", "", cleaned)
     
     # Parse JSON
     try:
-        result = json.loads(cleaned)
+        data = json.loads(cleaned)
     except json.JSONDecodeError as e:
         raise ValueError(
-            f"Observer returned invalid JSON. Raw output: {raw_output[:200]}"
-        ) from e
+            f"Observer returned invalid JSON. Raw response:\n{raw_content}\n\nError: {e}"
+        )
     
     # Validate required fields
-    required_fields = ["content_type", "title", "confidence"]
-    missing = [f for f in required_fields if f not in result]
+    required_fields = [
+        "content_type",
+        "title",
+        "primary_text",
+        "code_blocks",
+        "error_messages",
+        "url_visible",
+        "confidence",
+    ]
+    missing = [field for field in required_fields if field not in data]
     if missing:
-        raise ValueError(f"Observer JSON missing required fields: {missing}")
+        raise ValueError(
+            f"Observer JSON missing required fields: {missing}\n\nReceived: {data}"
+        )
     
-    # Ensure confidence is a float
-    if not isinstance(result["confidence"], (int, float)):
-        raise ValueError(f"confidence must be a number, got: {result['confidence']}")
+    # Validate content_type is one of the allowed values
+    valid_types = ["youtube", "documentation", "code", "error", "other"]
+    if data["content_type"] not in valid_types:
+        raise ValueError(
+            f"Invalid content_type: {data['content_type']}. Must be one of {valid_types}"
+        )
     
-    return result
-
-
-def _strip_markdown_fences(text: str) -> str:
-    """Remove markdown code fences from text.
+    # Validate confidence is a float between 0 and 1
+    if not isinstance(data["confidence"], (int, float)) or not (0 <= data["confidence"] <= 1):
+        raise ValueError(
+            f"Invalid confidence: {data['confidence']}. Must be float between 0.0 and 1.0"
+        )
     
-    Gemini sometimes wraps JSON in:
-        ```json
-        {...}
-        ```
-    
-    This function strips those fences to get raw JSON.
-    """
-    text = text.strip()
-    
-    # Remove opening fence
-    if text.startswith("```"):
-        # Find the end of the first line (the fence line)
-        first_newline = text.find("\n")
-        if first_newline != -1:
-            text = text[first_newline + 1 :]
-    
-    # Remove closing fence
-    if text.endswith("```"):
-        text = text[: -3]
-    
-    return text.strip()
+    return data
