@@ -12,6 +12,7 @@ from src.agents.guide import run_guide
 from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
 from src.graph.state import ContextFlowState
+from src.output.cli import copy_to_clipboard, display_guidance, prompt_continue
 
 
 def capture_node(state: ContextFlowState) -> dict:
@@ -130,5 +131,63 @@ def guide_node(state: ContextFlowState) -> dict:
         # If Guide fails, set error and let error_node handle it
         return {
             "error": f"Guide failed: {str(e)}",
+            "should_continue": False,
+        }
+
+
+
+def output_node(state: ContextFlowState) -> dict:
+    """Output Node: Display guidance and copy to clipboard.
+    
+    This node:
+    - Reads guidance from state
+    - Displays in beautiful CLI format (rich)
+    - Copies context_package to clipboard
+    - Asks user: Continue or Quit?
+    - Increments loop_count
+    
+    Args:
+        state: Current graph state with guidance field
+    
+    Returns:
+        dict with should_continue and loop_count updated
+    """
+    try:
+        # Get guidance from state
+        guidance = state.get("guidance")
+        if not guidance:
+            return {
+                "error": "output_node: No guidance in state",
+                "should_continue": False,
+            }
+        
+        # Get loop count
+        loop_count = state.get("loop_count", 0) + 1
+        
+        # Display guidance
+        display_guidance(guidance, loop_count)
+        
+        # Copy context package to clipboard
+        context_package = guidance.get("context_package", "")
+        if context_package:
+            success = copy_to_clipboard(context_package)
+            if success:
+                print("✅ Context package copied to clipboard!")
+                print("   Paste it into ChatGPT, Claude, or Gemini.")
+            else:
+                print("⚠️  Could not copy to clipboard (pbcopy not available)")
+        
+        # Ask user: Continue or Quit?
+        should_continue = prompt_continue()
+        
+        return {
+            "loop_count": loop_count,
+            "should_continue": should_continue,
+            "error": None,
+        }
+    
+    except Exception as e:
+        return {
+            "error": f"Output failed: {str(e)}",
             "should_continue": False,
         }
