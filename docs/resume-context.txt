@@ -209,7 +209,7 @@ Instead of you gathering context for the AI, the AI gathers context for you.
 - State management in agent workflows
 
 ### Software Engineering
-- Python 3.14 with type hints
+- Python 3.11 with type hints
 - Async/await patterns
 - Error handling and retry logic
 - CLI development with rich library
