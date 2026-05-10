@@ -25,6 +25,16 @@ CRITICAL RULES:
 - Do NOT wrap in ```json or ``` 
 - Follow the exact schema below
 
+PRIORITY RULE (MOST IMPORTANT):
+If the screenshot shows BOTH a browser/application window AND a terminal/IDE:
+→ ANALYZE THE BROWSER/APPLICATION CONTENT, NOT THE TERMINAL
+→ Ignore terminal windows, code editors, and development tools
+→ Focus on the MAIN CONTENT the user is viewing (YouTube, websites, documentation pages)
+
+Example: If you see a browser showing ESPN cricket + a terminal with Python code:
+→ Analyze the ESPN cricket content (content_type: "other", title: "ESPN Cricket")
+→ Do NOT analyze the terminal/Python code
+
 SCHEMA (you MUST match this exactly):
 {
   "content_type": "youtube" | "documentation" | "code" | "error" | "other",
@@ -39,9 +49,9 @@ SCHEMA (you MUST match this exactly):
 CONTENT TYPE DEFINITIONS:
 - "youtube": YouTube video player visible
 - "documentation": Technical docs, tutorials, blog posts, README files
-- "code": IDE, code editor, terminal with code
+- "code": IDE, code editor, terminal with code (ONLY if no browser/app visible)
 - "error": Error messages, stack traces, red text, exception logs
-- "other": Anything else (desktop, settings, blank screen)
+- "other": Anything else (websites, sports pages, news, desktop, settings, blank screen)
 
 CONFIDENCE SCORING:
 - 0.9-1.0: Very clear, can read text easily

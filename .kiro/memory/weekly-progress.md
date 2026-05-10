@@ -22,6 +22,7 @@ Auto-updated every Friday or at week completion.
 1. **Model Deprecation (Day 2):** Groq deprecated Llama 3.2 Vision mid-development → Migrated to Llama 4 Scout in 30 minutes
 2. **JSON Parsing (Day 2):** Vision models return markdown fences → Regex stripping + validation
 3. **Infinite Loop Bug (Day 3):** Observer fails → retries forever → Fixed with error check in conditional edge
+4. **Multi-Window Priority (Day 3):** Observer analyzed terminal instead of browser → Added PRIORITY RULE to prompt
 
 ### What I Learned
 - **LangGraph Patterns:** StateGraph, conditional edges, node functions

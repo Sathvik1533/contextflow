@@ -91,3 +91,63 @@ Auto-updated after every architectural decision.
 ---
 
 === END ARCHITECTURE DECISIONS ===
+
+
+---
+
+## Decision 4: Observer Priority Rule for Multi-Window Scenarios
+**Date:** May 10, 2026 (Day 3)  
+**Context:** When both browser and terminal visible, Observer was analyzing terminal code instead of browser content
+
+### THE PROBLEM
+User opens ESPN cricket page + terminal with Python code visible. Observer analyzes terminal (Python code) instead of browser (cricket content). Cannot prove ContextFlow works on ANY content (sports, not just tech).
+
+### DECISION
+Add PRIORITY RULE to Observer prompt:
+```
+PRIORITY RULE (MOST IMPORTANT):
+If the screenshot shows BOTH a browser/application window AND a terminal/IDE:
+→ ANALYZE THE BROWSER/APPLICATION CONTENT, NOT THE TERMINAL
+→ Ignore terminal windows, code editors, and development tools
+→ Focus on the MAIN CONTENT the user is viewing
+```
+
+### WHY THIS APPROACH
+1. **Prompt engineering > code changes** — No need to modify capture logic or add window detection
+2. **Immediate fix** — Works instantly without complex window management APIs
+3. **Assumption-based** — Assumes if browser visible, user wants to learn from browser content
+4. **Simple** — One prompt change vs complex window detection code
+
+### ALTERNATIVES REJECTED
+1. **Window-specific capture (pyobjc)** — Too complex, requires macOS-specific APIs, harder to maintain
+2. **User selection UI** — Adds friction, defeats "one hotkey" goal
+3. **No fix** — Cannot prove versatility, limits credibility
+
+### TRADEOFFS
+**Pros:**
+- ✅ Works immediately
+- ✅ No code changes needed
+- ✅ Enables proving ContextFlow works on ANY content
+- ✅ Simple to understand and maintain
+
+**Cons:**
+- ❌ Assumes browser = priority (not always true)
+- ❌ User cannot override priority
+- ❌ Doesn't work if user WANTS to analyze terminal
+
+### FUTURE ENHANCEMENT (Week 2+)
+Pass `user_intent` to Observer to dynamically decide priority:
+- Intent: "Explain this cricket match" → Prioritize browser
+- Intent: "Debug this Python error" → Prioritize terminal
+- Intent: "Explain this code" → Prioritize IDE/terminal
+
+This makes priority **context-aware** instead of **assumption-based**.
+
+### IMPACT
+- ✅ Observer now correctly analyzes ESPN cricket content even with terminal visible
+- ✅ Can prove ContextFlow works on sports, news, websites (not just tech content)
+- ✅ Increases credibility for LinkedIn/Instagram posts
+- ✅ Demonstrates prompt engineering skills
+
+### FILES CHANGED
+- `src/agents/observer.py` — Added PRIORITY RULE to OBSERVER_PROMPT

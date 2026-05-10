@@ -1,8 +1,8 @@
 # ContextFlow — Master Learning Notes
 **Auto-updated after every task | Your interview prep reference**
 
-Last Updated: Day 2 Complete (May 10, 2026, 1:00 PM)  
-Progress: 6/34 tasks (18%)
+Last Updated: Day 3 Complete (May 10, 2026, 9:46 PM)  
+Progress: 9/34 tasks (26%) — Week 1 COMPLETE
 
 ---
 
@@ -303,22 +303,66 @@ graph.add_conditional_edges("observer", should_retry_capture, {"guide": "guide",
 
 ---
 
-## 🚀 NEXT: TASK-008, TASK-009 (Day 3)
+### ✅ TASK-008: Entry Point
+**What:** Created `src/main.py` as user-facing entry point  
+**Why:** Single command to run the full system with user intent prompt  
+**Key Learning:** User intent personalizes guidance — same screen, different advice
 
-### TASK-007: LangGraph Assembly
-**What:** Connect all nodes into StateGraph with conditional edges  
-**Why:** Automatic orchestration, error handling, retry logic  
-**File:** `src/graph/builder.py`
+**2 Lines to Memorize:**
+```python
+user_intent = input("   → ").strip()
+# User intent drives personalized guidance — key to useful AI assistants
+```
 
-### TASK-008: Entry Point
-**What:** Create `src/main.py` as user-facing entry point  
-**Why:** Single command to run the full system  
-**File:** `src/main.py`
+### ✅ TASK-009: Integration Test
+**What:** Created `tests/test_integration.py` with 3 tests  
+**Why:** Validate Milestone 2 complete — full loop working  
+**Key Learning:** Integration tests reveal bugs unit tests miss
 
-### TASK-009: Integration Test
-**What:** Test full flow with 3 different content types  
-**Why:** Validate Milestone 2 is complete  
-**File:** `tests/test_integration.py`
+**Technical Challenge Solved:** Infinite loop bug — Observer failed + low confidence → retry forever. Fixed with error check in conditional edge.
+
+**2 Lines to Memorize:**
+```python
+if state.get("error"):
+    return "END"  # Exit on error — prevents infinite retry loops
+```
+
+### ✅ DAY 3 FIX: Observer Priority Rule
+**What:** Added PRIORITY RULE to Observer prompt to prioritize browser content over terminal  
+**Why:** When both browser and terminal visible, Observer was analyzing terminal code instead of browser content  
+**Key Learning:** Prompt engineering is critical for multi-window scenarios
+
+**The Problem:**
+- User opens ESPN cricket page + terminal with Python code
+- Observer analyzes terminal (Python code) instead of browser (cricket content)
+- Can't prove ContextFlow works on ANY content (sports, not just tech)
+
+**The Solution:**
+Added explicit instruction to Observer prompt:
+```
+PRIORITY RULE (MOST IMPORTANT):
+If the screenshot shows BOTH a browser/application window AND a terminal/IDE:
+→ ANALYZE THE BROWSER/APPLICATION CONTENT, NOT THE TERMINAL
+→ Ignore terminal windows, code editors, and development tools
+→ Focus on the MAIN CONTENT the user is viewing
+```
+
+**Result:** Observer now correctly analyzes ESPN cricket content even with terminal visible ✅
+
+**2 Lines to Memorize:**
+```python
+# Observer prompt: "If browser + terminal visible → analyze browser, ignore terminal"
+# Prompt engineering solves multi-window priority without code changes
+```
+
+**Future Enhancement (Week 2+):**
+Pass `user_intent` to Observer to dynamically decide priority:
+- Intent: "Explain this cricket match" → Prioritize browser
+- Intent: "Debug this Python error" → Prioritize terminal
+
+---
+
+## 🚀 NEXT: Week 2 — File Reader + Terminal Watcher (Days 4-7)
 
 ---
 

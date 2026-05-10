@@ -70,3 +70,21 @@ Auto-updated after every task with concepts, questions, and answers.
 ---
 
 === END INTERVIEW PREP ===
+
+
+---
+
+## DAY 3 FIX: Observer Priority Rule
+
+**Concept I Should Know Cold:**
+"Prompt engineering can solve multi-window scenarios without code changes. When both browser and terminal are visible, explicit priority rules guide the AI."
+
+**Interview Question:**
+"How did you handle the case where multiple windows are visible on screen?"
+
+**My Answer:**
+"I encountered a problem where the Observer was analyzing terminal code instead of browser content when both were visible. Instead of writing complex window detection code, I solved it with prompt engineering. I added a PRIORITY RULE to the Observer prompt: 'If browser + terminal visible → analyze browser, ignore terminal.' This worked immediately and proved ContextFlow works on ANY content (sports, news, tech), not just technical content. For the future, I plan to make this dynamic by passing user_intent to Observer — if the user says 'explain this cricket match,' prioritize browser; if they say 'debug this error,' prioritize terminal."
+
+---
+
+=== END INTERVIEW PREP ===

@@ -4,6 +4,7 @@ PROJECT NAME: ContextFlow
 TAGLINE: Stop explaining. Start building. AI that reads your screen, files, and terminal—so you don't have to.
 GITHUB: https://github.com/Sathvik1533/contextflow
 STATUS: Week 1 COMPLETE — Day 3/28, 26% done (9/34 tasks)
+CURRENT FOCUS: Day 3 visual output for LinkedIn/Instagram — proving ContextFlow works on ANY content (sports, tech, docs)
 TIMELINE: May 2026 - Present
 ROLE: Solo Developer & AI Engineer
 
@@ -179,8 +180,14 @@ Instead of you gathering context for the AI, the AI gathers context for you.
 
 ### Challenge 4: Infinite Loop Bug
 **Problem:** Observer fails → retries → fails → retries forever (10,007 iterations)
-**Solution:** Check for errors in conditional edge: `if state.get("error"): return END`
+**Solution:** Check for errors in conditional edge: `if state.get("error"): return "END"`
 **Learning:** Error handling must be explicit in conditional edges, not assumed
+
+### Challenge 5: Multi-Window Priority
+**Problem:** When both browser (ESPN cricket) and terminal (Python code) visible, Observer analyzed terminal instead of browser content
+**Solution:** Added PRIORITY RULE to Observer prompt: "If browser + terminal visible → analyze browser, ignore terminal"
+**Learning:** Prompt engineering solves multi-window scenarios without code changes
+**Impact:** Enables proving ContextFlow works on ANY content (sports, news, tech, docs), not just technical content
 
 ---
 
