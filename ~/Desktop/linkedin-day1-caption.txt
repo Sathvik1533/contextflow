@@ -1,0 +1,51 @@
+I'm tired of wasting 2 hours a day on copy-paste.
+
+Every time I'm learning something new - watching a tutorial, reading docs, debugging code - I need help from ChatGPT.
+
+But here's what I have to do:
+→ Pause what I'm doing
+→ Screenshot or copy text
+→ Switch to ChatGPT
+→ Paste it
+→ Type out the entire context: "I'm watching this React tutorial, here's the code, I don't understand hooks..."
+→ Wait
+→ Switch back
+
+3-5 minutes. Every. Single. Time.
+
+I do this 10-20 times a day.
+
+That's 30-100 minutes wasted just on explaining context to an AI that should be able to SEE what I'm looking at.
+
+So I'm building ContextFlow.
+
+One hotkey → AI reads my screen → Creates a summary → Copies to clipboard → I paste into any LLM.
+
+No more manual work. 5 minutes becomes 2 seconds.
+
+THE ARCHITECTURE (swipe →):
+• Screen capture (mss)
+• Observer Agent (Llama 3.2 Vision reads screen)
+• Guide Agent (Llama 3.3 generates learning path)
+• State management (LangGraph coordinates everything)
+• Clipboard (paste into ChatGPT/Claude/Gemini)
+
+THE CODE (swipe →):
+This is the "state" - the shared memory passed between all AI agents.
+Like a relay race baton.
+
+WHY I'M BUILDING THIS:
+This is MY problem. I face this friction every single day.
+
+Not just with tutorials - with EVERYTHING I want to share with LLMs.
+
+So I'm solving it. For myself first.
+
+Building in public for the next 30 days.
+Tomorrow: Screen capture implementation.
+
+If you face this same problem, follow along.
+
+Repo: github.com/Sathvik1533/contextflow
+
+#AI #Python #LangGraph #BuildInPublic #RealProblems #MachineLearning #AIEngineering #LearningInPublic

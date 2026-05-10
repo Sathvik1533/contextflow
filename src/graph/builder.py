@@ -23,6 +23,7 @@ def should_retry_capture(state: ContextFlowState) -> str:
     """Conditional edge: Check if Observer confidence is high enough.
     
     This routing function decides:
+    - If error exists → go to END (exit, don't loop forever)
     - If confidence >= 0.6 → go to "guide" (continue workflow)
     - If confidence < 0.6 → go to "capture" (retry screenshot)
     
@@ -34,8 +35,12 @@ def should_retry_capture(state: ContextFlowState) -> str:
         state: Current graph state with extracted_context
     
     Returns:
-        "guide" or "capture" (next node name)
+        "guide", "capture", or END (next node name or terminal)
     """
+    # Check for errors first
+    if state.get("error"):
+        return END  # Exit on error
+    
     extracted_context = state.get("extracted_context", {})
     confidence = extracted_context.get("confidence", 0.0)
     
@@ -129,6 +134,7 @@ def build_graph() -> StateGraph:
         {
             "guide": "guide",          # If returns "guide" → go to guide_node
             "capture": "capture",      # If returns "capture" → go to capture_node
+            END: END,                  # If returns END → exit graph
         }
     )
     
