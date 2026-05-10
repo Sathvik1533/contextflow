@@ -1,0 +1,68 @@
+Day 3. Week 1 complete.
+
+I just spent 3 hours debugging an infinite loop.
+
+The Observer agent failed. The graph tried to retry. Failed again. Retry. Failed. Retry.
+
+10,007 iterations before LangGraph killed it.
+
+This is the reality of multi-agent systems. One bug = infinite loop.
+
+But here's what I learned: **Conditional edges are everything.**
+
+When you have 4 agents passing data to each other, you can't just say "if this fails, try again."
+
+You need smart routing:
+- If Observer confidence < 0.6 → retry (maybe screen was blurry)
+- If Observer returns error → EXIT (don't loop forever)
+- If user says quit → EXIT (respect user intent)
+
+One line of code fixed it:
+```python
+if state.get("error"):
+    return END  # Exit on error, don't retry
+```
+
+WHAT I BUILT THIS WEEK:
+• Day 1: Screen capture + State schema
+• Day 2: Observer (Vision AI) + Guide (Text AI)
+• Day 3: LangGraph orchestration + Integration tests
+
+THE SYSTEM NOW:
+```
+Capture → Observer → [confidence check] → Guide → Output
+   ↑                                                  ↓
+   └──────────────── [user continues?] ──────────────┘
+```
+
+It's a loop. Automatic. Self-correcting. Error-handling.
+
+One command runs everything:
+```bash
+python src/main.py
+```
+
+WEEK 1 STATS:
+• 9/34 tasks complete (26%)
+• 2/4 milestones complete (50%)
+• 169 lines of orchestration code
+• All integration tests passing ✅
+
+WHAT I LEARNED:
+• LangGraph conditional edges > manual if/else
+• State management = relay race with a notebook
+• Error handling must be explicit, not assumed
+• One bug can teach you more than 10 tutorials
+
+WEEK 2 STARTS TOMORROW:
+• File Reader agent (reads open code files)
+• Terminal Watcher agent (captures errors)
+• Clipboard Monitor agent (tracks what you copy)
+
+The goal: Gather context from 6 sources automatically.
+
+Building in public. Week 1/4 complete.
+
+Repo: https://github.com/Sathvik1533/contextflow
+
+#AI #Python #LangGraph #BuildInPublic #MachineLearning #AIEngineering #MultiAgentSystems #LearningInPublic
