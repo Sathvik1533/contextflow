@@ -18,6 +18,36 @@ Progress: 6/34 tasks (18%)
 
 ## 🧠 CORE CONCEPTS (Memorize These)
 
+### 0. THE RELAY RACE ANALOGY (Explain This to Anyone)
+
+**Imagine 4 runners in a relay race:**
+1. **Runner 1 (Capture):** Takes a photo with a camera
+2. **Runner 2 (Observer):** Looks at the photo and writes notes
+3. **Runner 3 (Guide):** Reads the notes and gives advice
+4. **Runner 4 (Output):** Shows the advice on a big screen
+
+**The Notebook = State**
+
+Instead of passing a baton, they pass a **notebook**. Each runner:
+- Reads what previous runners wrote
+- Adds their own notes
+- Passes the notebook to the next runner
+
+**WITHOUT LangGraph (Manual):**
+You stand there and tell each runner: "Runner 1, go! Now Runner 2, go! Now Runner 3, go!"
+
+**WITH LangGraph (Automatic):**
+The runners know the order automatically. You just say "START!" and they run in sequence without you telling each one.
+
+**Conditional Edges (Smart Routing):**
+Runner 2 (Observer) checks the photo quality:
+- If photo is clear → pass notebook to Runner 3 (Guide)
+- If photo is blurry → pass notebook back to Runner 1 (Capture) to retake photo
+
+**Interview Answer:** "State is like a notebook passed between runners in a relay race. Each agent reads what it needs and writes its results. LangGraph orchestrates the flow automatically, with conditional edges making smart routing decisions based on the data."
+
+---
+
 ### 1. STATE MANAGEMENT (The Relay Race Baton)
 ```python
 class ContextFlowState(TypedDict):
@@ -236,9 +266,44 @@ console.print(Panel(summary, title="Summary", style="bold green"))
 # Professional CLI output matters for user experience
 ```
 
+### ✅ TASK-007: LangGraph Assembly
+**What:** Created `build_graph()` in `src/graph/builder.py`  
+**Why:** Automatic orchestration with conditional routing and error handling  
+**Key Learning:** LangGraph separates routing logic from business logic
+
+**The Graph Structure:**
+```
+START → capture → observer → [confidence check] → guide → output → [continue check] → END
+                     ↓                                        ↓
+                [if confidence < 0.6]                  [if should_continue]
+                     ↓                                        ↓
+                  capture ←────────────────────────────────────┘
+```
+
+**Conditional Edges:**
+1. **After observer:** Check confidence >= 0.6?
+   - YES → go to guide (continue)
+   - NO → go to capture (retry)
+
+2. **After output:** Check should_continue?
+   - YES → go to capture (loop)
+   - NO → go to END (exit)
+
+**Why Conditional Edges > If/Else in Nodes:**
+- **Separation of concerns:** Observer extracts, graph routes
+- **Modularity:** Can change routing without touching node code
+- **Testability:** Can test routing logic separately
+- **Visibility:** Graph structure is declarative and clear
+
+**2 Lines to Memorize:**
+```python
+graph.add_conditional_edges("observer", should_retry_capture, {"guide": "guide", "capture": "capture"})
+# Conditional edges separate routing logic from business logic — key LangGraph pattern
+```
+
 ---
 
-## 🚀 NEXT: TASK-007, TASK-008, TASK-009 (Day 3)
+## 🚀 NEXT: TASK-008, TASK-009 (Day 3)
 
 ### TASK-007: LangGraph Assembly
 **What:** Connect all nodes into StateGraph with conditional edges  
