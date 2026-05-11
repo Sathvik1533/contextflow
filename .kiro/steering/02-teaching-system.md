@@ -17,16 +17,24 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
 
 ### BEFORE EVERY TASK:
 
-1. **Context Setup (5 min)**
-   - **WHAT:** What we're building in this task
-   - **WHY:** Why it exists, what problem it solves
-   - **HOW:** How it connects to the full data flow
-   - **WHEN:** When this component runs in the system
+1. **Context Setup (5 min) — THE 4 PRINCIPLES**
+   - **WHAT:** What we're building in this task (the feature/component)
+   - **WHY:** Why it exists, what problem it solves (the necessity)
+   - **WHEN:** When this component runs in the system (the timing/trigger)
+   - **HOW:** How it connects to the full data flow (the implementation)
+     - Which file(s) contain this code
+     - Which concepts are used (functions, classes, dictionaries, etc.)
+     - Why we chose approach X instead of alternative Y
+     - What breaks if we remove this
 
-2. **Review Previous Tasks**
-   - Quick recap of what we built before
-   - How previous tasks connect to this one
-   - Cumulative understanding (not isolated tasks)
+2. **Cumulative Review (MANDATORY — Auto-triggered)**
+   - **RULE:** Before teaching Day N, recap ALL previous days (Day 1 to Day N-1)
+   - **Example:** Before Day 3 → Recap Day 1 + Day 2
+   - **Example:** Before Day 4 → Recap Day 1 + Day 2 + Day 3
+   - **Why:** Cumulative understanding, not isolated tasks
+   - **How:** Read from `docs/learning-notes.md` and summarize each day's key learnings
+   - **Format:** "Day X: What we built + Why it matters + Key concept"
+   - **Duration:** 2-3 minutes per day (quick, focused recap)
 
 3. **Analogies First**
    - Real-world analogy before technical explanation
@@ -67,7 +75,14 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
 
 ### AFTER EVERY TASK:
 
-1. **3 Mandatory Questions (Must Answer Correctly)**
+1. **Cumulative Recap (Auto-triggered BEFORE next day)**
+   - Before starting Day N teaching, automatically recap Days 1 to N-1
+   - Read from `docs/learning-notes.md` to get previous days' content
+   - Format: "Day X: Built Y, Why it matters: Z, Key concept: W"
+   - Keep it quick (2-3 min per day) but comprehensive
+   - Goal: Reinforce cumulative understanding, show how everything connects
+
+2. **3 Mandatory Questions (Must Answer Correctly)**
 
    **Q1: "What does this code do?"**
    - Tests implementation understanding
@@ -100,21 +115,43 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
    - Must be able to explain these cold in an interview
    - Add to `docs/learning-notes.md`
 
-4. **Update Learning Notes**
-   - Auto-update `docs/learning-notes.md` with:
-     - Task summary (what, why, key learning)
-     - 2 lines to memorize
-     - Technical challenges solved
-     - New patterns learned (especially LangGraph patterns)
-   - Commit: `docs: update learning notes — TASK-XXX complete`
-
-5. **Update Resume Context**
-   - Auto-update `docs/resume-context.txt` with:
-     - Increment task count and percentage
-     - Move ⏳ → ✅ for completed items
-     - Add new technical challenges
-     - Update agent count if new agents added
-   - Commit: `docs: update resume context — TASK-XXX complete`
+4. **Auto-Update ALL Memory Files (MANDATORY — No Reminders Needed)**
+   
+   **PERMANENT RULE:** After every task completion, automatically update ALL these files:
+   
+   ✅ **`docs/learning-notes.md`**
+   - Task summary (what, why, key learning)
+   - 2 lines to memorize
+   - Technical challenges solved
+   - New patterns learned (especially LangGraph patterns)
+   
+   ✅ **`.kiro/memory/doubts-diary.md`**
+   - Every question user asked during the task
+   - Answer with context
+   - Pattern classification
+   
+   ✅ **`.kiro/memory/architecture-decisions.md`**
+   - Decision made (if any architectural choice was made)
+   - Why this approach
+   - Alternatives rejected
+   - Tradeoffs
+   
+   ✅ **`.kiro/memory/debug-log.md`**
+   - Only update if debugging occurred
+   - Error encountered
+   - Why it occurred
+   - How we debugged it
+   - Solution and why it works
+   
+   ✅ **`docs/resume-context.txt`**
+   - Increment task count and percentage
+   - Move ⏳ → ✅ for completed items
+   - Add new technical challenges
+   - Update agent count if new agents added
+   
+   **CRITICAL:** User will NEVER remind you again. You must auto-trigger this after every task.
+   
+   **Commit after updates:** `docs: update memory logs — Day X complete`
 
 ---
 

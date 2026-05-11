@@ -465,3 +465,154 @@ This file auto-updates after every task with:
 ---
 
 === END LEARNING NOTES ===
+
+
+---
+
+## 📅 DAY 3 COMPLETE — User Intent Prompt (Personalization)
+
+**Date:** May 12, 2026  
+**Task:** Add user intent prompt to personalize guidance  
+**Status:** ✅ Complete (with 4 hours of debugging)
+
+### WHAT WE BUILT
+Added interactive user intent prompt to `src/main.py`:
+```python
+user_intent = input("   → ").strip()
+if not user_intent:
+    user_intent = "general learning"
+```
+
+User is now asked: "📝 What are you trying to learn right now?"
+
+Their answer gets passed to all agents via initial state:
+```python
+initial_state = {
+    "user_intent": user_intent,  # ⭐ NEW! Day 3 addition
+    ...
+}
+```
+
+### WHY IT MATTERS
+**Day 2:** Generic advice for everyone (not useful)  
+**Day 3:** Personalized advice based on user's goal (actually helpful)
+
+**Example:**
+- Screen: ESPN cricket page
+- Intent: "Explain this cricket match" → Guide gives cricket analysis
+- Intent: "Build a sports website" → Guide gives web dev advice
+
+**Same screen, different advice.** This is the power of personalization.
+
+### KEY CONCEPTS LEARNED
+
+#### 1. **Function** (`def main():`)
+A named block of code that does a specific job. Like a recipe with a name, ingredients (parameters), and instructions (code inside).
+
+#### 2. **Input** (`input("→ ")`)
+Pauses program, waits for user to type, returns what they typed as a string. Essential for interactive programs.
+
+#### 3. **Dictionary** (`{"key": "value"}`)
+Collection of key-value pairs. Like a notebook with labeled sections. Agents read/write specific sections by name.
+
+#### 4. **F-string** (`f"Hello {name}"`)
+String with variables inserted using `{variable}`. Cleaner than concatenation (`"Hello " + name`).
+
+#### 5. **Import** (`from X import Y`)
+Brings code from another file so you can use it. Enables code organization across multiple files.
+
+### 2 LINES TO MEMORIZE
+```python
+user_intent = input("   → ").strip()
+# Pauses program, waits for user input, cleans up spaces
+
+"user_intent": user_intent,  # Passes user's goal to all agents
+```
+
+**Why these matter:** They're the bridge between user and AI. Without them, the system is generic. With them, it's personalized.
+
+### TECHNICAL CHALLENGES SOLVED
+
+#### Challenge 1: Python 3.14 Syntax Errors
+**Problem:** Numbered lists in docstrings (`1.`, `2.`, `3.`) broke with `SyntaxError: invalid decimal literal`  
+**Root Cause:** Python 3.14 parses `1.` as decimal number  
+**Solution:** Changed to bullet points (`-` instead of `1.`)  
+**Lesson:** Never use Python 3.14 for production. Use 3.11 or 3.12.
+
+#### Challenge 2: Observer JSON Parsing Failures
+**Problem:** Observer returning invalid JSON (`'\n  "content_type"'`)  
+**Root Cause:** Prompt too complex (70 lines), vision model confused  
+**Solution:** Simplified prompt from 70 lines → 30 lines  
+**Lesson:** Vision models need SHORT prompts (<40 lines). Long prompts = confusion.
+
+#### Challenge 3: Observer Analyzing Wrong Window
+**Problem:** Observer analyzing terminal instead of browser (ESPN cricket)  
+**Root Cause:** Terminal has clearer text, gets priority  
+**Solution:** Added PRIORITY RULE to prompt: "If browser + terminal visible → analyze browser"  
+**Lesson:** Prompt engineering can solve multi-window priority without code changes.
+
+### DEBUGGING MARATHON (4 hours)
+Day 3 was mostly debugging, not feature work. Spent 4 hours fixing:
+1. Python 3.14 syntax errors
+2. Observer JSON parsing failures
+3. Virtual environment activation issues
+4. Observer analyzing wrong window
+
+**Key Insight:** I learned more from 4 hours of debugging than 2 days of smooth development.
+
+**Debugging teaches:**
+- How systems ACTUALLY work (not how you think they work)
+- How to read error messages (they're usually right)
+- How to simplify when stuck (remove complexity until it works)
+- How to stay calm when everything breaks
+
+### LANGGRAPH PATTERNS REINFORCED
+
+#### Pattern: Initial State Setup
+```python
+initial_state = {
+    "screenshot_b64": "",
+    "user_intent": user_intent,  # User's goal
+    "extracted_context": {},
+    "guidance": {},
+    "error": None,
+    "loop_count": 0,
+    "should_continue": True,
+}
+
+result = app.invoke(initial_state)  # Runs entire graph
+```
+
+**Key Learning:** Initial state is passed to first node, then flows through all nodes. Each node reads what it needs and writes its output.
+
+### INTERVIEW TALKING POINTS
+
+**"Tell me about a technical challenge you faced"**
+"On Day 3, I spent 4 hours debugging. The Observer agent was returning invalid JSON because my prompt was too complex (70 lines). Vision models get confused with long prompts. I simplified it to 30 lines and it worked. This taught me that AI prompt engineering is as important as code quality."
+
+**"How do you handle debugging?"**
+"I read error messages carefully, test one change at a time, and simplify when stuck. On Day 3, I had 6 different errors. I fixed them incrementally, documented each one in a debug log, and learned more from those 4 hours than from 2 days of smooth development."
+
+**"Why did you add user intent?"**
+"Personalization. Same screen, different goals. If you're watching a cricket match, you might want sports analysis OR web development advice (how to build a sports site). User intent makes the guidance actually useful instead of generic."
+
+### FILES CHANGED
+- `src/main.py` — Added user intent prompt, confirmation message, graph building visibility
+
+### WEEK 1 COMPLETE ✅
+**9/9 tasks done:**
+1. ✅ GitHub repo + project structure
+2. ✅ State schema (TypedDict)
+3. ✅ Screen capture (mss → base64)
+4. ✅ Observer agent (vision → JSON)
+5. ✅ Guide agent (reasoning → advice)
+6. ✅ Output node (rich CLI + clipboard)
+7. ✅ Error node (catches failures)
+8. ✅ LangGraph assembly (conditional edges)
+9. ✅ User intent prompt (personalization)
+
+**Next:** Week 2 — File Reader + Terminal Watcher agents
+
+---
+
+=== END DAY 3 LEARNING NOTES ===

@@ -154,3 +154,40 @@ After every task, add:
 ---
 
 === END DOUBTS DIARY ===
+
+
+---
+
+## DAY 3 DOUBTS
+
+### Q9: Why ask for user intent before running the graph?
+**Asked:** During Day 3 teaching session  
+**Answer:** Personalization. Same screen, different goals. ESPN cricket page: Intent "Explain cricket" → sports analysis. Intent "Build sports website" → web dev advice. Without intent = generic advice (not useful). With intent = personalized advice (actually helpful).
+
+### Q10: Why use input() instead of command-line arguments?
+**Asked:** During Day 3 code review  
+**Answer:** Better UX for interactive use. Command-line args require typing full command every time. Interactive prompt is clearer and more user-friendly. User sees the question and types naturally.
+
+### Q11: Why default to "general learning" instead of empty string?
+**Asked:** During Day 3 code explanation  
+**Answer:** Guide needs SOME context. With empty string, Guide has no idea what to focus on. With "general learning", Guide knows to give broad, beginner-friendly advice. Better than nothing.
+
+### Q12: What is an f-string and why use it?
+**Asked:** During Day 3 line-by-line code breakdown  
+**Answer:** f-string = formatted string. `f"Hello {name}"` inserts variable value into string. Cleaner than `"Hello " + name` (old way). Python 3.6+ feature. Makes string formatting readable.
+
+### Q13: Why use .strip() after input()?
+**Asked:** During Day 3 code explanation  
+**Answer:** Users might accidentally type spaces. `"  hello  ".strip()` returns `"hello"`. Cleans up user input. Prevents bugs from extra whitespace.
+
+### Q14: What is a dictionary and why use it for state?
+**Asked:** During Day 3 teaching session  
+**Answer:** Dictionary = key-value pairs `{"key": "value"}`. Like a notebook with labeled sections. Agents can read/write specific sections by name. Better than list (no labels) or separate variables (too many).
+
+### Q15: Why show "Building graph..." message?
+**Asked:** During Day 3 UX discussion  
+**Answer:** User feedback! User knows something is happening. Without it, program seems frozen. Good UX = always tell user what's happening. Builds trust.
+
+---
+
+=== END DOUBTS DIARY ===

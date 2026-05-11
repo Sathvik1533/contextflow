@@ -8,10 +8,19 @@
 
 **Name:** ContextFlow
 **Tagline:** Screen-aware AI learning assistant. No copy-paste. No re-explaining. One hotkey.
-**Stack:** Python + LangGraph + Gemini 2.0 Flash (Vision + Text) + mss + rich
-**Constraint:** Free tier only. Google AI Studio. No paid APIs.
-**Platform:** macOS M1 (primary). CLI first, overlay later.
+**Stack:** Python + LangGraph + Groq API (Llama 4 Scout Vision + Llama 3.3 70B) + mss + rich  
+**Constraint:** Free tier only. Groq API. No paid APIs.  
+**Platform:** macOS M1 (primary). CLI first, overlay later.  
 **Goal:** GitHub portfolio project → internship in AI/ML engineering
+
+**Tech Stack Details:**
+- **Agent Framework:** LangGraph + LangChain
+- **LLM API:** Groq (free tier) - Llama 4 Scout Vision + Llama 3.3 70B
+- **Screen Capture:** mss + Pillow
+- **CLI Output:** rich library
+- **Hotkey Listener:** pynput (Week 4)
+- **Package Manager:** uv (10-100x faster than pip)
+- **Python Version:** 3.11 or 3.12 (NOT 3.14 — compatibility issues)
 
 ---
 
