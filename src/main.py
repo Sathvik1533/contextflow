@@ -66,6 +66,10 @@ def main():
     try:
         result = app.invoke(initial_state)
         
+        # Debug: Print the final state
+        if result.get("error"):
+            console.print(f"\n⚠️  Error occurred: {result.get('error')}", style="red")
+        
         console.print("\n" + "="*70, style="cyan")
         console.print("✅ ContextFlow session complete!", style="bold green")
         console.print(f"   Total captures: {result.get('loop_count', 0)}", style="green")

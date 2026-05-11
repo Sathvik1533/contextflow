@@ -53,6 +53,7 @@ def observer_node(state: ContextFlowState) -> dict:
     
     This node:
     - Reads screenshot_b64 from state
+    - Reads user_intent from state (for priority decisions)
     - Sends to Groq Vision API (meta-llama/llama-4-scout-17b-16e-instruct)
     - Parses response into structured JSON
     - Writes extracted_context to state
@@ -60,7 +61,7 @@ def observer_node(state: ContextFlowState) -> dict:
     If confidence < 0.6, the graph will trigger a re-capture via conditional edge.
     
     Args:
-        state: Current graph state with screenshot_b64 field
+        state: Current graph state with screenshot_b64 and user_intent fields
     
     Returns:
         dict with extracted_context key (or error if API fails)
@@ -74,8 +75,11 @@ def observer_node(state: ContextFlowState) -> dict:
                 "should_continue": False,
             }
         
-        # Run the Observer agent
-        extracted_context = run_observer(screenshot_b64)
+        # Get user intent (for priority decisions)
+        user_intent = state.get("user_intent", "")
+        
+        # Run the Observer agent with user_intent
+        extracted_context = run_observer(screenshot_b64, user_intent)
         
         return {
             "extracted_context": extracted_context,
