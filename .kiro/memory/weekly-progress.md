@@ -23,13 +23,20 @@ Auto-updated every Friday or at week completion.
 2. **JSON Parsing (Day 2):** Vision models return markdown fences → Regex stripping + validation
 3. **Infinite Loop Bug (Day 3):** Observer fails → retries forever → Fixed with error check in conditional edge
 4. **Multi-Window Priority (Day 3):** Observer analyzed terminal instead of browser → Added PRIORITY RULE to prompt
+5. **Python 3.14 Syntax Errors (Day 3):** Numbered lists in docstrings broke → Changed to bullet points
+6. **Observer JSON Parsing Failures (Day 3):** Prompt too complex (70 lines) → Simplified to 30 lines
+7. **Browser Size Dependency (Day 3):** Observer prioritizes largest window → Workaround (make browser large), proper fix in Week 2
 
 ### What I Learned
-- **LangGraph Patterns:** StateGraph, conditional edges, node functions
+- **LangGraph Patterns:** StateGraph, conditional edges, node functions, initial state setup
 - **Multi-Agent Design:** Separation of concerns (Vision vs Text)
 - **State Management:** TypedDict as shared memory (relay race notebook)
 - **Error Handling:** Explicit error checks prevent infinite loops
 - **Testing:** Integration tests catch bugs early
+- **Prompt Engineering:** Vision models need <40 lines, long prompts = confusion
+- **Debugging Methodology:** Read errors carefully, test one change at a time, simplify when stuck
+- **Python Fundamentals:** Functions, dictionaries, input(), f-strings, imports
+- **User Intent:** Personalization makes AI actually useful (same screen, different advice)
 
 ### Milestones Achieved
 - ✅ Milestone 1: Observer returns valid JSON
@@ -43,10 +50,14 @@ Auto-updated every Friday or at week completion.
 - Git Context agent (git status, recent commits)
 
 ### Stats
-- **Code Written:** ~800 lines
+- **Code Written:** ~1000 lines (including Day 3 user intent prompt)
 - **Tests:** 12 tests, all passing
-- **Commits:** 12 commits
-- **Time:** 3 days (8-10 hours total)
+- **Commits:** 15+ commits
+- **Time:** 3 days (12-15 hours total, including 4 hours debugging on Day 3)
+- **Debugging Time:** 4 hours (Day 3 debugging marathon)
+- **Lines Debugged:** 900-line debug log created
+- **LinkedIn Posts:** 3 posts (Day 1, Day 2, Day 3)
+- **Instagram Stories:** 3 stories (Day 1, Day 2, Day 3)
 
 ---
 
