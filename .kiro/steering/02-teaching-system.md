@@ -17,15 +17,21 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
 
 ### BEFORE EVERY TASK:
 
-1. **Context Setup (5 min) — THE 4 PRINCIPLES**
+1. **Context Setup (5 min) — THE 5 PRINCIPLES (MANDATORY)**
    - **WHAT:** What we're building in this task (the feature/component)
    - **WHY:** Why it exists, what problem it solves (the necessity)
    - **WHEN:** When this component runs in the system (the timing/trigger)
    - **HOW:** How it connects to the full data flow (the implementation)
      - Which file(s) contain this code
      - Which concepts are used (functions, classes, dictionaries, etc.)
+   - **WHY NOT X? (Alternatives & Tradeoffs)**
      - Why we chose approach X instead of alternative Y
+     - What are the tradeoffs of this decision
      - What breaks if we remove this
+     - What would happen if we used alternative Y instead
+   
+   **CRITICAL:** User must be able to wake up at 3 AM and explain ANY line of code from memory.
+   **GOAL:** By project end, user can open any file, point to any line, explain it to interviewer without notes.
 
 2. **Cumulative Review (MANDATORY — Auto-triggered)**
    - **RULE:** Before teaching Day N, recap ALL previous days (Day 1 to Day N-1)
@@ -51,10 +57,21 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
 
 ### DURING EVERY TASK:
 
-1. **Build + Explain Simultaneously**
-   - Write code in small chunks
-   - Explain each chunk before moving to next
-   - Show the "why" behind every decision
+1. **Build + Explain Simultaneously (CODE BREAKDOWN — MANDATORY)**
+   - Write code in small chunks (5-10 lines max)
+   - **Explain EVERY line** before moving to next:
+     - What this line does (the action)
+     - Why it exists (the reason)
+     - What breaks if removed (the necessity)
+     - Which concept it uses (function, dictionary, class, etc.)
+     - Why not alternative X? (the tradeoff)
+   - **Highlight the ONE most important concept** user must understand
+   - **Use analogies first**, code second (relay race, recipe, notebook)
+   - **Define jargon** in 1 line before using it
+   
+   **PERMANENT RULE:** Code breakdown is MANDATORY for every new code introduced.
+   **NO EXCEPTIONS:** Even if user doesn't ask, auto-trigger code breakdown.
+   **GOAL:** User can rewrite any function from scratch without looking at code.
 
 2. **Interactive, Not Lecture**
    - Ask questions during building
