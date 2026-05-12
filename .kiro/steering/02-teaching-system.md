@@ -334,3 +334,109 @@ By Milestone 4 (Week 4), you should be able to:
 ---
 
 === END TEACHING SYSTEM ===
+
+
+---
+
+## 📚 WEEK 4 FRONTEND TEACHING (AUTO-TRIGGER)
+
+**PERMANENT RULE:** When Week 4 starts (Tauri + React UI), automatically teach:
+
+### JavaScript Fundamentals (Through React Context)
+- Variables (let, const, var)
+- Functions (arrow functions, regular functions)
+- Objects and arrays
+- Destructuring
+- Template literals
+- Async/await
+- Promises
+- Event handling
+
+**Teaching Method:** Explain JS concepts AS THEY APPEAR in React code, not separately.
+
+### React Basics (Project-Level, Not Advanced)
+- Components (functional components)
+- JSX syntax
+- Props (passing data)
+- State (useState hook)
+- Effects (useEffect hook)
+- Event handlers
+- Conditional rendering
+- Lists and keys
+
+**Teaching Method:** Build the UI, explain every React concept used.
+
+### Next.js Basics (For FinSight Context)
+- App Router vs Pages Router
+- Server Components vs Client Components
+- API Routes
+- File-based routing
+- Data fetching patterns
+
+**Teaching Method:** Review FinSight code, explain what user already built.
+
+### Tauri Basics (For ContextFlow UI)
+- What Tauri is (Rust + Web)
+- How it differs from Electron
+- IPC (Inter-Process Communication)
+- Window management
+- System tray integration
+
+**Teaching Method:** Build ContextFlow overlay, explain as we go.
+
+### Goal by End of Week 4:
+- ✅ User can explain React components in ContextFlow UI
+- ✅ User can explain Next.js patterns in FinSight
+- ✅ User is comfortable with JS basics (not mastery)
+- ✅ User can talk about frontend in interviews (project-level)
+
+**NOT REQUIRED:**
+- ❌ Advanced React patterns (Context API, Redux, custom hooks)
+- ❌ Advanced Next.js (middleware, edge functions, ISR)
+- ❌ Deep JavaScript (prototypes, closures, this binding)
+
+**LEVEL:** Portfolio-level, internship-level, comfortable-level, project-level.
+
+---
+
+## 🎯 POST-CONTEXTFLOW MASTERY CHECKLIST
+
+**By end of Week 4, user must be comfortable explaining:**
+
+### Python Stack
+- ✅ Python fundamentals (functions, classes, dictionaries, lists, loops, conditionals)
+- ✅ Python OOP (classes, methods, inheritance, self, __init__)
+- ✅ FastAPI basics (routes, middleware, async, Pydantic)
+- ✅ LangGraph (StateGraph, nodes, edges, conditional routing)
+- ✅ LangChain (agents, prompts, chains)
+- ✅ Groq API (Llama models, vision, text)
+
+### Frontend Stack (Week 4)
+- ✅ JavaScript basics (variables, functions, objects, arrays, async/await)
+- ✅ React basics (components, props, state, hooks, JSX)
+- ✅ Next.js basics (App Router, API Routes, Server Components)
+- ✅ Tauri basics (desktop app, IPC, window management)
+
+### Database Stack (From FinSight/MLRIT)
+- ✅ SQL basics (SELECT, INSERT, UPDATE, DELETE, WHERE, JOIN)
+- ✅ PostgreSQL (via Supabase in FinSight)
+- ✅ SQLite (via Prisma in MLRIT)
+- ✅ ORMs (Prisma, Supabase client)
+
+### Tools & Concepts
+- ✅ Git (commits, branches, push, pull)
+- ✅ uv (Python package manager)
+- ✅ npm (Node package manager)
+- ✅ Environment variables (.env files)
+- ✅ API integration (REST APIs, JSON)
+- ✅ Error handling (try/except, graceful degradation)
+
+**TEACHING COMMITMENT:**
+- I will teach ALL of these through building ContextFlow
+- I will review FinSight/MLRIT code to explain what user built
+- I will make user comfortable, not overwhelmed
+- I will focus on project-level understanding, not academic mastery
+
+---
+
+=== END TEACHING SYSTEM ===
