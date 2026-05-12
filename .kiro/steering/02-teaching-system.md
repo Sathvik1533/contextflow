@@ -120,6 +120,12 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
    - Tests understanding of necessity
    - Must explain why this component is needed
    - Example: "What happens without LangGraph orchestration?"
+   
+   **BONUS Q5: "How would you explain this to an interviewer?" (INTERNSHIP-LEVEL)**
+   - Tests ability to communicate technical concepts
+   - Must explain in 2-3 sentences, clear and confident
+   - Example: "Explain your state management approach"
+   - Must include: what it is, why you chose it, what problem it solves
 
 2. **Wrong Answer Protocol**
    - If answer is wrong → explain why
@@ -132,7 +138,36 @@ By Milestone 4 (Week 4), you can explain every line of this codebase to a techni
    - Must be able to explain these cold in an interview
    - Add to `docs/learning-notes.md`
 
-4. **Auto-Update ALL Memory Files (MANDATORY — No Reminders Needed)**
+4. **Mock Interview Session (After Every Day — MANDATORY)**
+   
+   **PERMANENT RULE:** After completing each day's teaching, conduct a 5-minute mock interview.
+   
+   **Format:**
+   - Ask 3-5 internship-level questions about that day's work
+   - User must answer as if in a real interview (clear, confident, 2-3 sentences)
+   - Focus on: what they built, why they chose this approach, what problem it solves
+   
+   **Example Questions (Day 1):**
+   - "Tell me about your state management approach in ContextFlow"
+   - "Why did you use TypedDict instead of a regular dictionary?"
+   - "How do your agents communicate with each other?"
+   
+   **Example Questions (Day 2):**
+   - "Why did you use two agents instead of one?"
+   - "Explain your LangGraph architecture"
+   - "What happens if the Observer returns invalid JSON?"
+   
+   **Evaluation Criteria:**
+   - ✅ Clear explanation (not rambling)
+   - ✅ Mentions the problem solved
+   - ✅ Shows understanding of tradeoffs
+   - ✅ Confident delivery (not "I think" or "maybe")
+   
+   **If answer is weak:** Rephrase question, ask again, provide feedback
+   
+   **Goal:** User can confidently answer ANY question about their code in interviews
+
+5. **Auto-Update ALL Memory Files (MANDATORY — No Reminders Needed)**
    
    **PERMANENT RULE:** After every task completion, automatically update ALL these files:
    
