@@ -62,6 +62,19 @@ class ContextFlowState(TypedDict):
     }
     """
     
+    # --- Terminal Layer (terminal_watcher_node writes) ---
+    terminal_context: dict
+    """Terminal history and error detection.
+    
+    Schema:
+    {
+        "recent_commands": List[str],  # Last 20 commands
+        "errors_detected": List[str],  # Commands with error keywords
+        "current_directory": str,  # Working directory
+        "shell_type": str  # "zsh", "bash", or "unknown"
+    }
+    """
+    
     # --- Guide Layer (guide_node writes) ---
     guidance: dict
     """Pedagogical response from Guide agent.

@@ -34,8 +34,8 @@ def main():
     # Ask for user intent
     console.print("📝 What are you trying to learn right now?", style="bold yellow")
     console.print("   (Press Enter to skip)\n")
+    # Ask for user intent through code
     user_intent = input("   → ").strip()
-    
     if not user_intent:
         user_intent = "general learning"
     
@@ -53,6 +53,7 @@ def main():
         "user_intent": user_intent,
         "session_history": [],
         "extracted_context": {},
+        "terminal_context": {},
         "guidance": {},
         "error": None,
         "loop_count": 0,

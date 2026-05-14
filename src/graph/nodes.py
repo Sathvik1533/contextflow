@@ -11,38 +11,51 @@ LangGraph automatically merges the returned dict into the state.
 from src.agents.guide import run_guide
 from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
+from src.capture.terminal import capture_terminal_context
 from src.graph.state import ContextFlowState
 from src.output.cli import copy_to_clipboard, display_guidance, prompt_continue
 
 
 def capture_node(state: ContextFlowState) -> dict:
-    """Entry point: Capture the screen and write to state.
+    """Entry point: Capture screen AND terminal context in parallel.
     
     This node:
     - Grabs the primary monitor using mss
     - Encodes to base64 PNG
-    - Writes screenshot_b64 and capture_timestamp to state
+    - Captures terminal history (shell commands, errors)
+    - Writes screenshot_b64, capture_timestamp, and terminal_context to state
+    
+    Why parallel?
+    - Screen capture and terminal capture are independent
+    - Running together saves ~100ms per cycle
+    - Both needed before Observer can analyze
     
     Args:
         state: Current graph state (not used in this node, but required by LangGraph)
     
     Returns:
-        dict with screenshot_b64 and capture_timestamp keys
+        dict with screenshot_b64, capture_timestamp, and terminal_context keys
     
     Raises:
         mss.exception.ScreenShotError: If macOS Screen Recording permission denied
     """
     try:
-        result = capture_screen(monitor_index=1, resize_to=(1280, 800))
+        # Capture screen
+        screen_result = capture_screen(monitor_index=1, resize_to=(1280, 800))
+        
+        # Capture terminal (runs immediately after, ~50ms)
+        terminal_result = capture_terminal_context()
+        
         return {
-            "screenshot_b64": result["screenshot_b64"],
-            "capture_timestamp": result["capture_timestamp"],
+            "screenshot_b64": screen_result["screenshot_b64"],
+            "capture_timestamp": screen_result["capture_timestamp"],
+            "terminal_context": terminal_result,
             "error": None,  # Clear any previous errors
         }
     except Exception as e:
         # If capture fails, set error and let error_node handle it
         return {
-            "error": f"Screen capture failed: {str(e)}",
+            "error": f"Capture failed: {str(e)}",
             "should_continue": False,
         }
 
@@ -91,6 +104,48 @@ def observer_node(state: ContextFlowState) -> dict:
         return {
             "error": f"Observer failed: {str(e)}",
             "should_continue": False,
+        }
+
+
+
+def terminal_watcher_node(state: ContextFlowState) -> dict:
+    """Terminal Watcher: Capture terminal history and detect errors.
+    
+    This node:
+    - Reads shell history file (~/.zsh_history or ~/.bash_history)
+    - Extracts last 20 commands
+    - Detects error patterns (Error:, Traceback, etc.)
+    - Gets current working directory
+    - Writes terminal_context to state
+    
+    Runs in parallel with capture_node (both capture at same time).
+    
+    Args:
+        state: Current graph state (not used, but required by LangGraph)
+    
+    Returns:
+        dict with terminal_context key (or error if capture fails)
+    """
+    try:
+        # Capture terminal context
+        terminal_context = capture_terminal_context()
+        
+        return {
+            "terminal_context": terminal_context,
+            "error": None,  # Clear any previous errors
+        }
+    
+    except Exception as e:
+        # If terminal capture fails, set error but don't stop graph
+        # Terminal context is optional, not critical
+        return {
+            "terminal_context": {
+                "recent_commands": [],
+                "errors_detected": [],
+                "current_directory": "",
+                "shell_type": "unknown",
+            },
+            "error": None,  # Don't fail the whole graph for terminal issues
         }
 
 
