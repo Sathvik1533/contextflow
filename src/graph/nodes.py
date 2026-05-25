@@ -162,12 +162,13 @@ def guide_node(state: ContextFlowState) -> dict:
 
         user_intent = state.get("user_intent", "")
         session_history = state.get("session_history", [])
+        user_level = state.get("user_level", "intermediate")  # TASK-012: from profile
 
         # Filter context to only relevant fields for this content type
         from src.utils.parser import parse_context
         filtered_context = parse_context(extracted_context)
 
-        guidance = run_guide(filtered_context, user_intent, session_history)
+        guidance = run_guide(filtered_context, user_intent, session_history, user_level)
 
         # Update session_history: store lightweight summary, NOT full context
         # Full extracted_context can be 5000+ tokens — storing 3 would overflow Groq free tier

@@ -14,13 +14,30 @@ class ContextFlowState(TypedDict):
     Each node reads specific fields and writes back its results.
     """
     
+    # --- Profile Layer (main.py writes once at startup, read-only for nodes) ---
+    user_level: str
+    """User's experience level from profile.json.
+
+    Values: "beginner" | "intermediate" | "advanced"
+    Set during onboarding. Guide uses this to adapt depth of explanation.
+    Beginners get plain English + analogies. Advanced users get architecture + edge cases.
+    """
+
+    profile: dict
+    """Full user profile dict from ~/.contextflow/profile.json.
+
+    Contains: role, user_level, stack, goal, session_count, topics_seen, recent_titles.
+    Written once by main.py at startup. Nodes read it — never write to it.
+    Profile persistence is handled by update_profile_after_session() in main.py.
+    """
+
     # --- Input Layer (capture_node writes) ---
     screenshot_b64: str
     """Base64-encoded PNG screenshot from mss capture."""
-    
+
     capture_timestamp: str
     """ISO 8601 timestamp of when the screenshot was taken."""
-    
+
     user_intent: str
     """What the user is trying to learn right now.
     

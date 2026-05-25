@@ -88,12 +88,17 @@ def main():
     if not startup_check():
         sys.exit(1)
 
-    # Ask for user intent
+    # TASK-012: Load or create user profile (onboarding on first launch, briefing on return)
+    from src.onboarding.profile import load_or_create_profile
+    profile = load_or_create_profile()
+    user_level = profile.get("user_level", "intermediate")
+
+    # Ask for session intent — what they're learning RIGHT NOW (different from long-term goal)
     console.print("What are you trying to learn right now?", style="bold yellow")
-    console.print("   (Press Enter to skip)\n")
-    user_intent = input("   → ").strip()
+    console.print(f"   [dim](Press Enter to use your goal: \"{profile.get('goal', 'general learning')}\")[/dim]\n")
+    user_intent = console.input("   [bold yellow]→[/bold yellow] ").strip()
     if not user_intent:
-        user_intent = "general learning"
+        user_intent = profile.get("goal", "general learning")
 
     console.print(f"\n[green]Got it: {user_intent}[/green]\n")
 
@@ -105,6 +110,7 @@ def main():
         "screenshot_b64": "",
         "capture_timestamp": "",
         "user_intent": user_intent,
+        "user_level": user_level,
         "session_history": [],
         "extracted_context": {},
         "terminal_context": {},
@@ -113,6 +119,7 @@ def main():
         "loop_count": 0,
         "retry_count": 0,
         "should_continue": True,
+        "profile": profile,
     }
 
     console.print("=" * 70 + "\n", style="cyan")
@@ -122,6 +129,10 @@ def main():
 
         if result.get("error"):
             console.print(f"\n[red]Error: {result.get('error')}[/red]")
+
+        # TASK-012: Update profile with session data so morning briefing has fresh info
+        from src.onboarding.profile import update_profile_after_session
+        update_profile_after_session(profile, result.get("session_history", []))
 
         console.print("\n" + "=" * 70, style="cyan")
         console.print("[bold green]Session complete.[/bold green]")

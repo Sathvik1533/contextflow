@@ -55,19 +55,18 @@ def capture_terminal_context() -> dict[str, Any]:
     result["shell_type"] = shell_type
     
     if not history_file:
-        print("⚠️  Could not find shell history file")
         return result
-    
+
     # Read history file
     try:
         commands = _read_history_file(history_file, shell_type)
         result["recent_commands"] = commands[-20:]  # Last 20 commands
-        
+
         # Detect errors in commands
         result["errors_detected"] = _detect_errors(commands[-50:])  # Check last 50
-        
-    except Exception as e:
-        print(f"⚠️  Could not read terminal history: {e}")
+
+    except Exception:
+        pass
     
     return result
 
@@ -120,7 +119,6 @@ def _read_history_file(history_file: Path, shell_type: str) -> list[str]:
     # Check file size
     file_size = history_file.stat().st_size
     if file_size > 1_000_000:  # 1MB
-        print(f"⚠️  History file is large ({file_size / 1_000_000:.1f}MB), reading last 1000 lines only")
         # Read last 1000 lines (approximate)
         with open(history_file, "rb") as f:
             f.seek(max(0, file_size - 100_000))  # Seek to ~100KB from end
