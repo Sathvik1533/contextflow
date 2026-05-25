@@ -31,3 +31,20 @@ snapshots/
 *.jpg
 sessions/
 logs/
+
+# Internal docs — not for GitHub (personal notes, AI steering files)
+.kiro/
+deep-dive/
+docs/
+graphify-out/
+tasks.md
+txt/
+uv.lock
+practice_*.py
+demo_*.py
+test_full_flow.py
+test_graph_build.py
+test_main.py
+test_observer_live.py
+test_with_output.py
+wake_me_up.py
