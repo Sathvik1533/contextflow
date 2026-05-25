@@ -143,45 +143,6 @@ def observer_node(state: ContextFlowState) -> dict:
 
 
 
-def terminal_watcher_node(state: ContextFlowState) -> dict:
-    """Terminal Watcher: Capture terminal history and detect errors.
-    
-    This node:
-    - Reads shell history file (~/.zsh_history or ~/.bash_history)
-    - Extracts last 20 commands
-    - Detects error patterns (Error:, Traceback, etc.)
-    - Gets current working directory
-    - Writes terminal_context to state
-    
-    Runs in parallel with capture_node (both capture at same time).
-    
-    Args:
-        state: Current graph state (not used, but required by LangGraph)
-    
-    Returns:
-        dict with terminal_context key (or error if capture fails)
-    """
-    try:
-        # Capture terminal context
-        terminal_context = capture_terminal_context()
-        
-        return {
-            "terminal_context": terminal_context,
-            "error": None,  # Clear any previous errors
-        }
-    
-    except Exception as e:
-        # If terminal capture fails, set error but don't stop graph
-        # Terminal context is optional, not critical
-        return {
-            "terminal_context": {
-                "recent_commands": [],
-                "errors_detected": [],
-                "current_directory": "",
-                "shell_type": "unknown",
-            },
-            "error": None,  # Don't fail the whole graph for terminal issues
-        }
 
 
 
@@ -208,8 +169,16 @@ def guide_node(state: ContextFlowState) -> dict:
 
         guidance = run_guide(filtered_context, user_intent, session_history)
 
-        # Update session_history: keep last 3 captures (drop oldest if full)
-        updated_history = (session_history + [extracted_context])[-3:]
+        # Update session_history: store lightweight summary, NOT full context
+        # Full extracted_context can be 5000+ tokens — storing 3 would overflow Groq free tier
+        history_entry = {
+            "content_type": extracted_context.get("content_type", "unknown"),
+            "title": (extracted_context.get("title") or "")[:80],
+            "url_visible": extracted_context.get("url_visible"),
+            "confidence": extracted_context.get("confidence", 0.0),
+            "capture_timestamp": state.get("capture_timestamp", ""),
+        }
+        updated_history = (session_history + [history_entry])[-3:]
 
         return {
             "guidance": guidance,

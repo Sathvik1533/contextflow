@@ -65,16 +65,19 @@ class ContextFlowState(TypedDict):
     }
     """
     
-    # --- Terminal Layer (terminal_watcher_node writes) ---
+    # --- Terminal Layer (capture_node writes — captured alongside screenshot) ---
     terminal_context: dict
-    """Terminal history and error detection.
-    
+    """Terminal history and error detection. Written by capture_node, not a separate node.
+
+    Fallback: if no shell history file found (~/.zsh_history / ~/.bash_history),
+    returns empty lists — never crashes, never blocks the pipeline.
+
     Schema:
     {
-        "recent_commands": List[str],  # Last 20 commands
+        "recent_commands": List[str],  # Last 20 commands (empty if no history)
         "errors_detected": List[str],  # Commands with error keywords
-        "current_directory": str,  # Working directory
-        "shell_type": str  # "zsh", "bash", or "unknown"
+        "current_directory": str,      # cwd (always available)
+        "shell_type": str              # "zsh", "bash", or "unknown"
     }
     """
     
