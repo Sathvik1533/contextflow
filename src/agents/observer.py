@@ -98,8 +98,8 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
     # Fallback chain: primary model → backup model
     # If primary is deprecated or fails, backup takes over automatically
     VISION_MODELS = [
-        "meta-llama/llama-4-scout-17b-16e-instruct",  # primary
-        "llava-v1.5-7b-4096-preview",                  # backup (Groq-hosted vision)
+        "meta-llama/llama-4-scout-17b-16e-instruct",      # primary — Llama 4 Scout
+        "meta-llama/llama-4-maverick-17b-128e-instruct",  # backup — Llama 4 Maverick
     ]
 
     llm = None
@@ -144,7 +144,8 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
             break
         except Exception as e:
             if "429" in str(e) and attempt == 0:
-                print("Rate limit hit. Waiting 10s...")
+                from rich.console import Console as _Console
+                _Console().print("[yellow]Rate limit hit. Waiting 10s before retry...[/yellow]")
                 time.sleep(10)
                 continue
             raise

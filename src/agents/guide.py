@@ -135,6 +135,7 @@ def run_guide(
     extracted_context: dict[str, Any],
     user_intent: str = "",
     session_history: list[dict] | None = None,
+    user_level: str = "intermediate",
 ) -> dict[str, Any]:
     """Run the Guide agent on extracted context from Observer.
     
@@ -242,7 +243,8 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
             break
         except Exception as e:
             if "429" in str(e) and attempt == 0:
-                print("[yellow]Rate limit hit. Waiting 10s...[/yellow]")
+                from rich.console import Console as _Console
+                _Console().print("[yellow]Rate limit hit. Waiting 10s before retry...[/yellow]")
                 time.sleep(10)
                 continue
             raise
@@ -251,8 +253,8 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
     # Parse response
     guidance = _parse_guide_response(raw_content)
     
-    # Build context package
-    context_package = _build_context_package(extracted_context, guidance)
+    # Build context package — includes Intent Layer for LLM clarity
+    context_package = _build_context_package(extracted_context, guidance, user_intent, user_level)
     guidance["context_package"] = context_package
     
     return guidance
@@ -313,16 +315,23 @@ def _parse_guide_response(raw_content: str) -> dict[str, Any]:
 
 def _build_context_package(
     extracted_context: dict[str, Any],
-    guidance: dict[str, Any]
+    guidance: dict[str, Any],
+    user_intent: str = "",
+    user_level: str = "intermediate",
 ) -> str:
     """Build the context package string for clipboard.
-    
+
     This is what gets copied to clipboard and pasted into ChatGPT/Claude/Gemini.
+    Includes Intent Layer at the bottom so the LLM knows exactly what the user needs —
+    not just what's on screen, but what kind of help is required.
     """
     from datetime import datetime
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
+    # Intent layer — closes the gap between "what's on screen" and "what user needs"
+    intent_line = user_intent if user_intent and user_intent != "general learning" else "not specified"
+
     package = f"""=== ContextFlow Snapshot — {timestamp} ===
 CONTENT TYPE: {extracted_context.get('content_type', 'unknown')}
 TITLE: {extracted_context.get('title', 'Unknown')}
@@ -340,6 +349,10 @@ ERRORS DETECTED:
 SUGGESTED QUESTIONS FOR LLMs:
 {chr(10).join(f"{i+1}. {q}" for i, q in enumerate(guidance.get('questions_to_ask', [])))}
 
+=== WHAT I NEED FROM YOU ===
+My level: {user_level}
+Specific question: {intent_line}
+Preferred response: use examples from the actual content above, not generic examples
 === END SNAPSHOT ==="""
     
     return package
