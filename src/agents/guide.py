@@ -10,6 +10,7 @@ Model: meta-llama/llama-3.3-70b-versatile (text reasoning, NOT vision)
 """
 
 import os
+import time
 from typing import Any
 
 from langchain_core.messages import HumanMessage
@@ -133,6 +134,7 @@ Keep it concise and actionable.""",
 def run_guide(
     extracted_context: dict[str, Any],
     user_intent: str = "",
+    session_history: list[dict] | None = None,
 ) -> dict[str, Any]:
     """Run the Guide agent on extracted context from Observer.
     
@@ -190,29 +192,60 @@ Errors Detected:
 Confidence: {extracted_context.get('confidence', 0.0):.2f}
 """.strip()
     
+    # Build session history string for multi-turn context awareness
+    history_str = ""
+    if session_history:
+        history_lines = []
+        for i, past in enumerate(session_history[-3:], 1):  # max 3 past captures
+            past_type = past.get("content_type", "unknown")
+            past_title = (past.get("title", "") or "untitled")[:60]
+            history_lines.append(f"  Capture {i}: {past_type} — {past_title}")
+        history_str = "\nPREVIOUS CAPTURES (for context):\n" + "\n".join(history_lines)
+
     # Get prompt template
     prompt_template = GUIDE_PROMPTS[content_type]
-    
+
     # Fill in template
     prompt = prompt_template.format(
-        context=context_str,
+        context=context_str + history_str,
         user_intent=user_intent or "Not specified"
     )
     
-    # Initialize Groq Text model
+    # Initialize Groq Text model with fallback chain (mirrors observer.py pattern)
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY not found in environment")
+
+    TEXT_MODELS = [
+        "llama-3.3-70b-versatile",   # primary — best reasoning
+        "llama3-70b-8192",           # backup — older but stable
+    ]
+
+    llm = None
+    last_error = None
+    for model in TEXT_MODELS:
+        try:
+            llm = ChatGroq(model=model, api_key=api_key, temperature=0.3, timeout=30)
+            break
+        except Exception as e:
+            last_error = e
+            continue
+
+    if llm is None:
+        raise ValueError(f"All text models failed. Last error: {last_error}")
     
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",  # Text reasoning model
-        api_key=api_key,
-        temperature=0.3,  # Slightly higher for more creative advice
-    )
-    
-    # Call the API
+    # Call the API — with rate limit recovery (429 = too many requests on free tier)
     message = HumanMessage(content=prompt)
-    response = llm.invoke([message])
+    for attempt in range(2):
+        try:
+            response = llm.invoke([message])
+            break
+        except Exception as e:
+            if "429" in str(e) and attempt == 0:
+                print("[yellow]Rate limit hit. Waiting 10s...[/yellow]")
+                time.sleep(10)
+                continue
+            raise
     raw_content = response.content
     
     # Parse response

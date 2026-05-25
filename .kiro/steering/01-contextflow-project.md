@@ -1,3 +1,6 @@
+---
+inclusion: always
+---
 # ContextFlow — Project Steering
 # Kiro reads this for every ContextFlow agent operation.
 # Architecture decisions are LOCKED unless user explicitly changes them.
@@ -216,3 +219,58 @@ Install: `uv pip install -e .` (not pip)
 | M4 complete | "Shipped v0.1. One hotkey. AI reads screen. Context on clipboard." |
 
 Post working demos only. No idea posts without code.
+
+---
+
+## WEEK 5+ FEATURES (Discussed and Locked — Do Not Forget)
+
+These are CONFIRMED features to build after Milestone 4. Each one is justified by project need, not trend.
+
+### Feature 1 — Global Hotkey
+- Tool: pynput
+- What: CMD+Shift+Space triggers capture from anywhere, no terminal needed
+- Gate: Week 4
+
+### Feature 2 — Video Frame Extraction (YouTube/any video)
+- Tools: yt-dlp (download video) + opencv-python (extract frames)
+- What: User gives YouTube URL → auto-extract 1 frame/30s → send all frames to Observer → Guide summarizes full video
+- Why justified: Manual screenshot-per-pause is frustrating and doesn't scale for 90-min videos
+- Gate: Week 5, after session memory works
+
+### Feature 3 — Session Memory with VectorDB
+- Tool: ChromaDB (NOT SQLite)
+- Why ChromaDB not SQLite: SQLite does keyword search. ChromaDB does meaning search.
+  "Show me sessions about async" finds "background tasks", "await", "concurrent" — not just exact words
+- What: Every capture → embed → store in ChromaDB
+- Gate: Week 5
+
+### Feature 4 — RAG over Past Sessions
+- Tool: LlamaIndex + ChromaDB
+- What: Guide answers "based on what you learned before..." using actual past captures
+- Why LlamaIndex: Handles chunking, embedding, retrieval automatically
+- Gate: Week 5, after ChromaDB is set up
+
+### Feature 5 — LangSmith Tracing
+- Tool: LangSmith SDK
+- Why justified: When graph has 4+ nodes making API calls, need to debug which node failed, why confidence dropped, what prompt was sent
+- NOT for trend — for real debugging of complex multi-node graph
+- Gate: Week 5, when graph complexity justifies it
+
+### Feature 6 — Error Pattern Detection
+- What: "You've seen this error 3x this week" — detect recurring errors across sessions
+- Tool: VectorDB similarity search over error_messages field
+- Gate: Week 5, after session memory
+
+### Feature 7 — Multi-Screen Capture
+- Tool: mss advanced (monitor_index selection)
+- What: Capture all monitors, not just primary
+- Gate: Week 6
+
+### POSTING SCHEDULE (Balanced — not daily)
+Post only at gates. 3 posts for v0.1:
+1. Milestone 2 done → pipeline works end-to-end (terminal demo recording)
+2. Milestone 4 done → hotkey + clipboard working (QuickTime screen recording)
+3. Week 5 done → "ContextFlow now remembers your sessions" (demo showing RAG)
+
+Record demos with QuickTime Player (Mac) → transfer to phone → post.
+No AI video generation needed — real working demos are more credible for portfolio.

@@ -11,45 +11,54 @@ Model: meta-llama/llama-4-scout-17b-16e-instruct (Llama 4 Scout with vision)
 import json
 import os
 import re
+import time
 from typing import Any
 
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
 
 
-# Strict JSON-only prompt — no prose, no markdown, just JSON
-OBSERVER_PROMPT = """You are a screen analysis agent. Analyze this screenshot and respond ONLY with valid JSON.
+# Base prompt — user_intent is injected dynamically in run_observer()
+OBSERVER_PROMPT_TEMPLATE = """You are a screen extraction agent. Your job is to extract ALL visible text and structure from this screenshot with maximum accuracy.
 
 CRITICAL RULES:
-- Output ONLY raw JSON, no markdown fences, no explanation, no prose
-- Do NOT wrap in ```json or ``` 
-- Follow the exact schema below
+- Output ONLY raw JSON. No markdown fences. No explanation. No prose.
+- Do NOT wrap in ```json or ```
+- Extract what you SEE — do not summarize, do not paraphrase
+- If a field has nothing visible, use empty string "" or empty array []
 
-SCHEMA (you MUST match this exactly):
-{
+PRIORITY RULE:
+If browser/app window AND terminal are both visible → analyze the BROWSER/APP content, ignore terminal.
+{user_intent_instruction}
+
+SCHEMA (match exactly):
+{{
   "content_type": "youtube" | "documentation" | "code" | "error" | "other",
-  "title": "string — page/video title visible on screen",
-  "primary_text": "string — main readable content, max 500 chars",
-  "code_blocks": ["array of code strings visible on screen"],
-  "error_messages": ["array of error/stack trace strings visible"],
-  "url_visible": "string or null — any URL visible in browser/terminal",
-  "confidence": 0.0-1.0 — how confident you are in this analysis
-}
+  "title": "exact title text visible on screen",
+  "primary_text": "ALL visible body text — extract every word you can read, no length limit",
+  "headings": ["every heading or section title visible, in order"],
+  "lists": ["every bullet point, numbered item, or list item visible"],
+  "code_blocks": ["every code snippet visible — exact characters, preserve indentation"],
+  "error_messages": ["every error, warning, stack trace, or red text visible"],
+  "url_visible": "exact URL from browser bar or null if none visible",
+  "tables": ["each table row as a string, pipe-separated columns"],
+  "confidence": 0.0
+}}
 
 CONTENT TYPE DEFINITIONS:
 - "youtube": YouTube video player visible
-- "documentation": Technical docs, tutorials, blog posts, README files
+- "documentation": Docs, tutorials, blog posts, README, guides
 - "code": IDE, code editor, terminal with code
-- "error": Error messages, stack traces, red text, exception logs
-- "other": Anything else (desktop, settings, blank screen)
+- "error": Error messages, stack traces, red text, exception logs dominant
+- "other": Desktop, settings, forms, anything else
 
 CONFIDENCE SCORING:
-- 0.9-1.0: Very clear, can read text easily
-- 0.7-0.9: Mostly clear, some text readable
-- 0.5-0.7: Somewhat unclear, hard to read details
-- 0.0-0.5: Very unclear, blurry, or blank screen
+- 0.9-1.0: Text clearly readable
+- 0.7-0.9: Mostly readable
+- 0.5-0.7: Partially readable
+- 0.0-0.5: Blurry, blank, or unreadable
 
-Analyze the screenshot now. Output ONLY the JSON object."""
+Extract everything visible now. Output ONLY the JSON object."""
 
 
 def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
@@ -85,18 +94,42 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY not found in environment")
-    
-    llm = ChatGroq(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",  # Updated: Llama 4 Scout with vision support
-        api_key=api_key,
-        temperature=0.1,  # Low temperature = more consistent JSON output
+
+    # Fallback chain: primary model → backup model
+    # If primary is deprecated or fails, backup takes over automatically
+    VISION_MODELS = [
+        "meta-llama/llama-4-scout-17b-16e-instruct",  # primary
+        "llava-v1.5-7b-4096-preview",                  # backup (Groq-hosted vision)
+    ]
+
+    llm = None
+    last_error = None
+    for model in VISION_MODELS:
+        try:
+            llm = ChatGroq(model=model, api_key=api_key, temperature=0.1, timeout=30)
+            break  # primary worked → stop trying
+        except Exception as e:
+            last_error = e
+            continue  # try next model
+
+    if llm is None:
+        raise ValueError(f"All vision models failed. Last error: {last_error}")
+
+    # Inject user_intent into prompt so Observer prioritizes what user is learning
+    if user_intent:
+        user_intent_instruction = f"USER INTENT: The user is trying to '{user_intent}'. Prioritize extracting content relevant to this."
+    else:
+        user_intent_instruction = ""
+
+    prompt = OBSERVER_PROMPT_TEMPLATE.format(
+        user_intent_instruction=user_intent_instruction
     )
-    
+
     # Build the message with text prompt + image
     # Groq Vision expects: HumanMessage with content=[text_dict, image_dict]
     message = HumanMessage(
         content=[
-            {"type": "text", "text": OBSERVER_PROMPT},
+            {"type": "text", "text": prompt},
             {
                 "type": "image_url",
                 "image_url": {"url": f"data:image/png;base64,{screenshot_b64}"},
@@ -104,8 +137,17 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
         ]
     )
     
-    # Call the API
-    response = llm.invoke([message])
+    # Call the API — with rate limit recovery (429 = too many requests on free tier)
+    for attempt in range(2):
+        try:
+            response = llm.invoke([message])
+            break
+        except Exception as e:
+            if "429" in str(e) and attempt == 0:
+                print("Rate limit hit. Waiting 10s...")
+                time.sleep(10)
+                continue
+            raise
     raw_content = response.content
     
     # Strip markdown fences if present (API sometimes returns ```json...```)
@@ -126,9 +168,12 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
         "content_type",
         "title",
         "primary_text",
+        "headings",
+        "lists",
         "code_blocks",
         "error_messages",
         "url_visible",
+        "tables",
         "confidence",
     ]
     missing = [field for field in required_fields if field not in data]

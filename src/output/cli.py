@@ -78,17 +78,23 @@ def display_guidance(guidance: dict[str, Any], loop_count: int) -> None:
 
 
 def copy_to_clipboard(text: str) -> bool:
-    """Copy text to macOS clipboard using pbcopy.
-    
-    Args:
-        text: Text to copy
-    
-    Returns:
-        True if successful, False otherwise
+    """Copy text to clipboard. Works on macOS, Linux, Windows.
+
+    macOS → pbcopy
+    Linux → xclip (if installed)
+    Windows → clip
     """
+    import sys
     try:
+        if sys.platform == "darwin":
+            cmd = ["pbcopy"]
+        elif sys.platform == "win32":
+            cmd = ["clip"]
+        else:
+            cmd = ["xclip", "-selection", "clipboard"]
+
         process = subprocess.Popen(
-            ["pbcopy"],
+            cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

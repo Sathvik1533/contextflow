@@ -48,17 +48,20 @@ class ContextFlowState(TypedDict):
     
     # --- Observer Layer (observer_node writes) ---
     extracted_context: dict
-    """Structured JSON from Gemini Vision analysis.
-    
+    """Structured JSON from Observer Vision analysis.
+
     Schema:
     {
         "content_type": "youtube" | "documentation" | "code" | "error" | "other",
         "title": str,
-        "primary_text": str,  # Max 500 chars
-        "code_blocks": List[str],
+        "primary_text": str,       # ALL visible body text, no length limit
+        "headings": List[str],     # Every heading/section title visible
+        "lists": List[str],        # Every bullet point or list item visible
+        "code_blocks": List[str],  # Every code snippet, exact characters
         "error_messages": List[str],
         "url_visible": str | None,
-        "confidence": float  # 0.0 to 1.0
+        "tables": List[str],       # Each table row as pipe-separated string
+        "confidence": float        # 0.0 to 1.0
     }
     """
     
@@ -93,7 +96,16 @@ class ContextFlowState(TypedDict):
     """Error message if any node fails. None if no error."""
     
     loop_count: int
-    """Number of capture cycles completed. Increments after each output_node run."""
-    
+    """Number of completed capture cycles. Increments after each output_node run."""
+
+    retry_count: int
+    """Number of low-confidence re-capture attempts in the current cycle.
+
+    Separate from loop_count — loop_count tracks completed cycles,
+    retry_count tracks failed attempts within one cycle.
+    Reset to 0 after each successful guide_node run.
+    Used by should_retry_capture to prevent infinite re-capture loop.
+    """
+
     should_continue: bool
     """False = exit graph. True = loop back to capture_node."""

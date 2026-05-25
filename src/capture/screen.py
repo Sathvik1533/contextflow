@@ -29,7 +29,7 @@ def capture_screen(monitor_index: int = 1, resize_to: tuple[int, int] = (1280, 8
         mss.exception.ScreenShotError: If screen recording permission denied (macOS)
         IndexError: If monitor_index doesn't exist
     """
-    with mss.mss() as sct:
+    with mss.MSS() as sct:
         # Validate monitor index
         if monitor_index >= len(sct.monitors):
             available = len(sct.monitors) - 1  # monitors[0] is "all monitors"

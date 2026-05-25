@@ -1,3 +1,6 @@
+---
+inclusion: always
+---
 # PERMANENT TEACHING SYSTEM — Apply to Every Task Forever
 
 This file defines the teaching approach for ContextFlow development.  
@@ -155,6 +158,45 @@ LEAD DEVELOPER QUESTION:
 - When we need features like "Show me all Python errors I've seen this week"
 
 ---
+
+#### **6. EXPLANATION STYLE (HOW TO TEACH — LOCKED)**
+
+These rules define the exact interaction style. Never deviate.
+
+**Rule 1 — Always use OUR codebase, never abstract examples.**
+Wrong: "Imagine a dictionary stores key-value pairs..."
+Right: "Look at nodes.py line 92: `state.get('user_intent', '')` — this is how we read from state."
+
+**Rule 2 — After every explanation, ask "say it back to me."**
+Never move to the next concept until user has stated the answer in their own words.
+If they say "I don't know" → break it into smaller pieces, ask again.
+If they second-guess themselves → say "You know this, just start with the first step."
+
+**Rule 3 — Trace every value through actual file paths and line numbers.**
+"user_intent starts at main.py → goes into initial_state dict → observer_node reads it at nodes.py:92 → passes it to run_observer() → injected into prompt at observer.py:118"
+Always show the full path, never just "it gets passed around."
+
+**Rule 4 — Address the confidence gap, not just the knowledge gap.**
+If user says "I'm not sure" or "is this right?" about something they clearly understand:
+→ Don't just confirm. Say: "You knew this. The problem is you second-guessed yourself before starting."
+→ Tell them the interview rule: Start with "okay so..." and trace the code out loud. The tracing IS the answer.
+
+**Rule 5 — Every explanation goes into docs/INTERVIEW-QA.md immediately.**
+Format: step-by-step with file paths and line numbers, the full trace path, key distinction, one-sentence interview answer.
+Never wait until end of task. Write it as soon as the explanation is given and user confirms understanding.
+
+**Rule 7 — Before writing any code, ask one architecture question.**
+Never just start coding. Ask: "Should this be X or Y? Why?"
+Wait for user's answer. Correct if wrong. Then write the code.
+This forces the user to think about design before implementation — the same skill interviewers test.
+Examples:
+- "Should this be an agent (LLM) or pure Python logic? Why?"
+- "Should this live in agents/ or graph/? Why?"
+- "Should this return a dict or a string? Why?"
+
+**Rule 6 — Concrete failure examples always use our actual constraints.**
+Don't say "imagine a rate limit." Say "you're on Groq free tier, 30 requests/minute, llm.invoke() returns 429."
+Every failure mode is grounded in our actual stack.
 
 === END SENIOR ARCHITECT PROTOCOLS ===
 
@@ -381,6 +423,14 @@ LEAD DEVELOPER QUESTION:
    - Move ⏳ → ✅ for completed items
    - Add new technical challenges
    - Update agent count if new agents added
+   
+   ✅ **`deep-dive/EXECUTION-FLOWCHART-MINIMAL.md`**
+   - Update "Last Updated" date
+   - Add new steps if execution flow changed
+   - Update code snippets if files modified
+   - Update state schema if new fields added
+   - Keep it minimal (5-20 lines per step max)
+   - Only update if execution flow actually changed (new nodes, new edges, new state fields)
    
    **CRITICAL:** User will NEVER remind you again. You must auto-trigger this after every task.
    

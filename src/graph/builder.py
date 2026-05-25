@@ -19,35 +19,32 @@ from src.graph.state import ContextFlowState
 from src.graph.nodes import capture_node, observer_node, guide_node, output_node
 
 
+MAX_RETRIES = 3  # Bug fix: prevent infinite low-confidence loop
+
+
 def should_retry_capture(state: ContextFlowState) -> str:
     """Conditional edge: Check if Observer confidence is high enough.
-    
-    This routing function decides:
-    - If error exists → go to END (exit, don't loop forever)
-    - If confidence >= 0.6 → go to "guide" (continue workflow)
-    - If confidence < 0.6 → go to "capture" (retry screenshot)
-    
-    Why 0.6 threshold?
-    - Below 0.6 = screen is blurry, blank, or Observer is uncertain
-    - Re-capturing gives Observer a fresh screenshot to analyze
-    
-    Args:
-        state: Current graph state with extracted_context
-    
-    Returns:
-        "guide", "capture", or END (next node name or terminal)
+    Bug fix: tracks retry_count to prevent infinite loop.
+    After MAX_RETRIES low-confidence captures → exit with error message.
+
+    Returns: "guide", "capture", or END
     """
-    # Check for errors first
     if state.get("error"):
-        return END  # Exit on error
-    
+        return END
+
     extracted_context = state.get("extracted_context", {})
     confidence = extracted_context.get("confidence", 0.0)
-    
+
     if confidence >= 0.6:
-        return "guide"  # High confidence → continue to Guide
-    else:
-        return "capture"  # Low confidence → re-capture screen
+        return "guide"
+
+    # Low confidence — use retry_count (NOT loop_count) to prevent infinite loop
+    # loop_count = completed cycles. retry_count = failed attempts this cycle.
+    retry_count = state.get("retry_count", 0)
+    if retry_count >= MAX_RETRIES:
+        return END
+
+    return "capture"
 
 
 def should_continue_loop(state: ContextFlowState) -> str:
@@ -111,7 +108,6 @@ def build_graph() -> StateGraph:
     """
     # Step 1: Create StateGraph with our state schema
     graph = StateGraph(ContextFlowState)
-    
     # Step 2: Add nodes
     # Each node is a function that takes state and returns updated fields
     graph.add_node("capture", capture_node)
@@ -123,11 +119,11 @@ def build_graph() -> StateGraph:
     # These edges ALWAYS go from node A to node B
     graph.add_edge("capture", "observer")  # After capture → always go to observer
     graph.add_edge("guide", "output")      # After guide → always go to output
-    
+
     # Step 4: Add conditional edges (decision points)
     # These edges check state and decide which node to go to next
-    
     # After observer → check confidence
+    
     graph.add_conditional_edges(
         "observer",                    # Source node
         should_retry_capture,          # Routing function
@@ -137,7 +133,6 @@ def build_graph() -> StateGraph:
             END: END,                  # If returns END → exit graph
         }
     )
-    
     # After output → check should_continue
     graph.add_conditional_edges(
         "output",                      # Source node
@@ -147,13 +142,10 @@ def build_graph() -> StateGraph:
             END: END,                  # If returns END → exit graph
         }
     )
-    
     # Step 5: Set entry point
     # This is where the graph starts when you call app.invoke()
     graph.set_entry_point("capture")
-    
     # Step 6: Compile the graph
     # This validates the graph structure and returns a runnable app
     app = graph.compile()
-    
     return app

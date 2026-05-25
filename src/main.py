@@ -6,47 +6,101 @@ Usage:
     python src/main.py
 """
 
+import os
+import sys
+
 from dotenv import load_dotenv
-from src.graph.builder import build_graph
 from rich.console import Console
 
-# Load environment variables
 load_dotenv()
 
 console = Console()
 
 
+def startup_check() -> bool:
+    """Feature 3 — Pre-flight check before graph starts.
+
+    Verifies: .env exists, GROQ_API_KEY set, mss can take a screenshot.
+    Shows one clear error message if anything is missing.
+    Returns True if all checks pass, False if startup should abort.
+    """
+    console.print("\n[bold cyan]Running startup checks...[/bold cyan]")
+    all_ok = True
+
+    # Check 1: GROQ_API_KEY
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        console.print("[red]GROQ_API_KEY not found.[/red]")
+        console.print("   Create a .env file with: GROQ_API_KEY=your_key_here")
+        console.print("   Get a free key at: console.groq.com/keys")
+        all_ok = False
+    else:
+        console.print("[green]  API key found[/green]")
+
+    # Check 2: Screen capture permission (mss test)
+    try:
+        import mss
+        with mss.MSS() as sct:
+            if len(sct.monitors) < 2:
+                console.print("[red]  No monitors detected.[/red]")
+                all_ok = False
+            else:
+                console.print("[green]  Screen capture ready[/green]")
+    except Exception as e:
+        console.print(f"[red]  Screen capture failed: {e}[/red]")
+        console.print("   On macOS: System Settings → Privacy → Screen Recording → allow Terminal/VS Code")
+        all_ok = False
+
+    # Check 3: Internet connectivity (quick DNS check)
+    try:
+        import socket
+        socket.setdefaulttimeout(3)
+        socket.getaddrinfo("api.groq.com", 443)
+        console.print("[green]  Internet connection OK[/green]")
+    except Exception:
+        console.print("[red]  No internet connection detected.[/red]")
+        console.print("   ContextFlow needs Groq API access. Check your network.")
+        all_ok = False
+
+    if all_ok:
+        console.print("[bold green]All checks passed.[/bold green]\n")
+    else:
+        console.print("\n[bold red]Fix the issues above and run again.[/bold red]\n")
+
+    return all_ok
+
+
 def main():
     """Main entry point for ContextFlow."""
-    
-    # Print welcome banner
-    console.print("\n" + "="*70, style="bold cyan")
-    console.print("  ContextFlow — AI Context Gathering Assistant", style="bold cyan")
-    console.print("="*70 + "\n", style="bold cyan")
-    
-    console.print("🎯 What this does:", style="bold yellow")
-    console.print("   1. Captures your screen")
-    console.print("   2. AI analyzes what's visible")
-    console.print("   3. Generates learning advice")
-    console.print("   4. Copies context to clipboard")
-    console.print("   5. You paste into ChatGPT/Claude/Gemini\n")
-    
+
+    console.print("\n" + "=" * 70, style="bold cyan")
+    console.print("  ContextFlow — Screen-Aware AI Dev Companion", style="bold cyan")
+    console.print("=" * 70 + "\n", style="bold cyan")
+
+    console.print("What this does:", style="bold yellow")
+    console.print("   1. Captures your screen (3s delay — switch tabs)")
+    console.print("   2. AI reads what's visible")
+    console.print("   3. Generates actionable advice")
+    console.print("   4. Copies context package to clipboard")
+    console.print("   5. Paste into ChatGPT/Claude/Gemini — zero re-explanation\n")
+
+    # Feature 3: startup check
+    if not startup_check():
+        sys.exit(1)
+
     # Ask for user intent
-    console.print("📝 What are you trying to learn right now?", style="bold yellow")
+    console.print("What are you trying to learn right now?", style="bold yellow")
     console.print("   (Press Enter to skip)\n")
-    # Ask for user intent through code
     user_intent = input("   → ").strip()
     if not user_intent:
         user_intent = "general learning"
-    
-    console.print(f"\n✅ Got it! Helping you with: {user_intent}\n", style="green")
-    
-    # Build the graph
-    console.print("🔧 Building ContextFlow graph...", style="yellow")
+
+    console.print(f"\n[green]Got it: {user_intent}[/green]\n")
+
+    # Build graph
+    from src.graph.builder import build_graph
     app = build_graph()
-    console.print("✅ Graph ready!\n", style="green")
-    
-    # Initial state
+
     initial_state = {
         "screenshot_b64": "",
         "capture_timestamp": "",
@@ -57,29 +111,27 @@ def main():
         "guidance": {},
         "error": None,
         "loop_count": 0,
+        "retry_count": 0,
         "should_continue": True,
     }
-    
-    # Run the graph
-    console.print("🚀 Starting ContextFlow...\n", style="bold green")
-    console.print("="*70 + "\n", style="cyan")
-    
+
+    console.print("=" * 70 + "\n", style="cyan")
+
     try:
         result = app.invoke(initial_state)
-        
-        # Debug: Print the final state
+
         if result.get("error"):
-            console.print(f"\n⚠️  Error occurred: {result.get('error')}", style="red")
-        
-        console.print("\n" + "="*70, style="cyan")
-        console.print("✅ ContextFlow session complete!", style="bold green")
+            console.print(f"\n[red]Error: {result.get('error')}[/red]")
+
+        console.print("\n" + "=" * 70, style="cyan")
+        console.print("[bold green]Session complete.[/bold green]")
         console.print(f"   Total captures: {result.get('loop_count', 0)}", style="green")
-        console.print("="*70 + "\n", style="cyan")
-        
+        console.print("=" * 70 + "\n", style="cyan")
+
     except KeyboardInterrupt:
-        console.print("\n\n⚠️  Interrupted by user. Exiting...", style="yellow")
+        console.print("\n\n[yellow]Interrupted. Exiting...[/yellow]")
     except Exception as e:
-        console.print(f"\n\n❌ Error: {str(e)}", style="bold red")
+        console.print(f"\n\n[bold red]Error: {str(e)}[/bold red]")
         console.print("   Check your .env file and API keys.", style="red")
 
 
