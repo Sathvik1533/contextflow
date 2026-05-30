@@ -24,6 +24,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 CHROMA_DIR = Path.home() / ".contextflow" / "chroma"
 
 
@@ -137,7 +141,7 @@ def retrieve_memory(extracted_context: dict[str, Any]) -> dict[str, Any]:
         }
 
     except Exception:
-        # Memory failure must never block the pipeline
+        logger.exception("retrieve_memory failed — returning empty context")
         return empty
 
 
@@ -184,6 +188,7 @@ def store_capture(extracted_context: dict[str, Any], guidance: dict[str, Any]) -
         return True
 
     except Exception:
+        logger.exception("store_capture failed — capture not persisted")
         return False
 
 

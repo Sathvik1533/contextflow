@@ -12,9 +12,13 @@ import sys
 from dotenv import load_dotenv
 from rich.console import Console
 
+from src.utils.logger import get_logger, setup_logging
+
 load_dotenv()
+setup_logging()   # must be first — sets up log file before anything else runs
 
 console = Console()
+logger = get_logger(__name__)
 
 
 def startup_check() -> bool:

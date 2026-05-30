@@ -16,6 +16,10 @@ from typing import Any
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 # Content-type-specific prompts
 GUIDE_PROMPTS = {

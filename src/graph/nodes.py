@@ -19,8 +19,10 @@ from src.capture.screen import capture_screen
 from src.capture.terminal import capture_terminal_context
 from src.graph.state import ContextFlowState
 from src.output.cli import copy_to_clipboard, display_guidance, prompt_continue
+from src.utils.logger import get_logger
 
 console = Console()
+logger = get_logger(__name__)
 
 
 MAX_CAPTURE_RETRIES = 3  # Bug fix: prevent infinite low-confidence loop
