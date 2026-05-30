@@ -11,7 +11,6 @@ Model: meta-llama/llama-4-scout-17b-16e-instruct (Llama 4 Scout with vision)
 import json
 import os
 import re
-import time
 from typing import Any
 
 from langchain_core.messages import HumanMessage
@@ -137,18 +136,14 @@ def run_observer(screenshot_b64: str, user_intent: str = "") -> dict[str, Any]:
         ]
     )
     
-    # Call the API — with rate limit recovery (429 = too many requests on free tier)
-    for attempt in range(2):
-        try:
-            response = llm.invoke([message])
-            break
-        except Exception as e:
-            if "429" in str(e) and attempt == 0:
-                from rich.console import Console as _Console
-                _Console().print("[yellow]Rate limit hit. Waiting 10s before retry...[/yellow]")
-                time.sleep(10)
-                continue
-            raise
+    # Call Groq Vision API with exponential backoff on rate limits (TASK-A)
+    from src.utils.retry import retry_with_backoff
+    response = retry_with_backoff(
+        fn=lambda: llm.invoke([message]),
+        max_attempts=3,
+        base_delay=2.0,
+        label="Observer Vision API",
+    )
     raw_content = response.content
     
     # Strip markdown fences if present (API sometimes returns ```json...```)

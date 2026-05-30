@@ -98,6 +98,20 @@ class ContextFlowState(TypedDict):
     }
     """
     
+    # --- Memory Layer (memory_node writes) ---
+    memory_context: dict
+    """Retrieved memory from ChromaDB — injected into Guide prompt.
+
+    Schema:
+    {
+        "past_captures": List[{title, summary, content_type, timestamp, similarity}],
+        "topic_count": int,          # times user has seen this topic
+        "recurring_errors": List[{error, when}],
+        "depth_signal": str          # natural language instruction for Guide depth
+    }
+    Empty dict on first session or if ChromaDB unavailable — never blocks pipeline.
+    """
+
     # --- Guide Layer (guide_node writes) ---
     guidance: dict
     """Pedagogical response from Guide agent.

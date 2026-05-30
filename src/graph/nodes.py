@@ -13,6 +13,7 @@ import time
 from rich.console import Console
 
 from src.agents.guide import run_guide
+from src.agents.memory import format_memory_for_guide, retrieve_memory, store_capture
 from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
 from src.capture.terminal import capture_terminal_context
@@ -146,6 +147,21 @@ def observer_node(state: ContextFlowState) -> dict:
 
 
 
+def memory_node(state: ContextFlowState) -> dict:
+    """Memory Node: Retrieve related past captures from ChromaDB.
+
+    Runs AFTER observer_node and BEFORE guide_node.
+    Gives Guide the full picture: not just what's on screen NOW,
+    but what the user has seen before, how many times, and what depth to use.
+
+    Never blocks the pipeline — returns empty memory_context if ChromaDB
+    is unavailable or this is the first session.
+    """
+    extracted_context = state.get("extracted_context", {})
+    memory_context = retrieve_memory(extracted_context)
+    return {"memory_context": memory_context}
+
+
 def guide_node(state: ContextFlowState) -> dict:
     """Guide Agent: Generate actionable advice from Observer's context.
 
@@ -163,12 +179,25 @@ def guide_node(state: ContextFlowState) -> dict:
         user_intent = state.get("user_intent", "")
         session_history = state.get("session_history", [])
         user_level = state.get("user_level", "intermediate")  # TASK-012: from profile
+        memory_context = state.get("memory_context", {})      # TASK-013: from memory_node
 
         # Filter context to only relevant fields for this content type
         from src.utils.parser import parse_context
         filtered_context = parse_context(extracted_context)
 
-        guidance = run_guide(filtered_context, user_intent, session_history, user_level)
+        # Format memory into a string for Guide prompt injection
+        memory_str = format_memory_for_guide(memory_context)
+
+        guidance = run_guide(
+            filtered_context,
+            user_intent,
+            session_history,
+            user_level,
+            memory_str=memory_str,
+        )
+
+        # TASK-013: Store this capture in ChromaDB after successful guide run
+        store_capture(extracted_context, guidance)
 
         # Update session_history: store lightweight summary, NOT full context
         # Full extracted_context can be 5000+ tokens — storing 3 would overflow Groq free tier

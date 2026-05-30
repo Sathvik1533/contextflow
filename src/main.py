@@ -114,6 +114,7 @@ def main():
         "session_history": [],
         "extracted_context": {},
         "terminal_context": {},
+        "memory_context": {},
         "guidance": {},
         "error": None,
         "loop_count": 0,

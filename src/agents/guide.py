@@ -136,6 +136,7 @@ def run_guide(
     user_intent: str = "",
     session_history: list[dict] | None = None,
     user_level: str = "intermediate",
+    memory_str: str = "",
 ) -> dict[str, Any]:
     """Run the Guide agent on extracted context from Observer.
     
@@ -206,9 +207,12 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
     # Get prompt template
     prompt_template = GUIDE_PROMPTS[content_type]
 
+    # Append memory context if available (TASK-013)
+    memory_section = f"\n\n{memory_str}" if memory_str else ""
+
     # Fill in template
     prompt = prompt_template.format(
-        context=context_str + history_str,
+        context=context_str + history_str + memory_section,
         user_intent=user_intent or "Not specified"
     )
     
@@ -235,19 +239,15 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
     if llm is None:
         raise ValueError(f"All text models failed. Last error: {last_error}")
     
-    # Call the API — with rate limit recovery (429 = too many requests on free tier)
+    # Call Groq Text API with exponential backoff on rate limits (TASK-A)
+    from src.utils.retry import retry_with_backoff
     message = HumanMessage(content=prompt)
-    for attempt in range(2):
-        try:
-            response = llm.invoke([message])
-            break
-        except Exception as e:
-            if "429" in str(e) and attempt == 0:
-                from rich.console import Console as _Console
-                _Console().print("[yellow]Rate limit hit. Waiting 10s before retry...[/yellow]")
-                time.sleep(10)
-                continue
-            raise
+    response = retry_with_backoff(
+        fn=lambda: llm.invoke([message]),
+        max_attempts=3,
+        base_delay=2.0,
+        label="Guide Text API",
+    )
     raw_content = response.content
     
     # Parse response

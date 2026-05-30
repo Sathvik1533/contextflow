@@ -16,7 +16,7 @@ The graph structure:
 
 from langgraph.graph import StateGraph, END
 from src.graph.state import ContextFlowState
-from src.graph.nodes import capture_node, observer_node, guide_node, output_node
+from src.graph.nodes import capture_node, guide_node, memory_node, observer_node, output_node
 
 
 MAX_RETRIES = 3  # Bug fix: prevent infinite low-confidence loop
@@ -112,12 +112,13 @@ def build_graph() -> StateGraph:
     # Each node is a function that takes state and returns updated fields
     graph.add_node("capture", capture_node)
     graph.add_node("observer", observer_node)
+    graph.add_node("memory", memory_node)   # TASK-013: memory between observer and guide
     graph.add_node("guide", guide_node)
     graph.add_node("output", output_node)
-    
+
     # Step 3: Add edges (automatic routing)
-    # These edges ALWAYS go from node A to node B
     graph.add_edge("capture", "observer")  # After capture → always go to observer
+    graph.add_edge("memory", "guide")      # After memory retrieval → always go to guide
     graph.add_edge("guide", "output")      # After guide → always go to output
 
     # Step 4: Add conditional edges (decision points)
@@ -128,9 +129,9 @@ def build_graph() -> StateGraph:
         "observer",                    # Source node
         should_retry_capture,          # Routing function
         {
-            "guide": "guide",          # If returns "guide" → go to guide_node
-            "capture": "capture",      # If returns "capture" → go to capture_node
-            END: END,                  # If returns END → exit graph
+            "guide": "memory",         # TASK-013: high confidence → memory first, then guide
+            "capture": "capture",      # low confidence → retry capture
+            END: END,
         }
     )
     # After output → check should_continue
