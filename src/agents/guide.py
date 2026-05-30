@@ -141,6 +141,7 @@ def run_guide(
     session_history: list[dict] | None = None,
     user_level: str = "intermediate",
     memory_str: str = "",
+    git_context: dict | None = None,
 ) -> dict[str, Any]:
     """Run the Guide agent on extracted context from Observer.
     
@@ -214,9 +215,15 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
     # Append memory context if available (TASK-013)
     memory_section = f"\n\n{memory_str}" if memory_str else ""
 
+    # Append git context if available (TASK-016)
+    git_section = ""
+    if git_context and git_context.get("is_git_repo"):
+        from src.capture.git import format_git_for_guide
+        git_section = format_git_for_guide(git_context)
+
     # Fill in template
     prompt = prompt_template.format(
-        context=context_str + history_str + memory_section,
+        context=context_str + history_str + memory_section + git_section,
         user_intent=user_intent or "Not specified"
     )
     

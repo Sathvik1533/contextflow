@@ -16,6 +16,7 @@ from src.agents.guide import run_guide
 from src.agents.memory import format_memory_for_guide, retrieve_memory, store_capture
 from src.agents.observer import run_observer
 from src.capture.screen import capture_screen
+from src.capture.git import capture_git_context
 from src.capture.terminal import capture_terminal_context
 from src.graph.state import ContextFlowState
 from src.output.cli import copy_to_clipboard, display_guidance, prompt_continue
@@ -43,6 +44,17 @@ def capture_node(state: ContextFlowState) -> dict:
 
         screen_result = capture_screen(monitor_index=1, resize_to=(1280, 800))
         terminal_result = capture_terminal_context()
+
+        # TASK-016: Capture git context — branch, commits, uncommitted files
+        # Runs in current working directory; falls back silently if not a git repo
+        cwd = terminal_result.get("current_directory", "")
+        git_result = capture_git_context(cwd=cwd or None)
+        terminal_result["git"] = git_result
+
+        logger.debug(
+            "capture_node complete | git_repo=%s | branch=%s",
+            git_result.get("is_git_repo"), git_result.get("branch", ""),
+        )
 
         # Increment retry_count — tracks low-confidence re-capture attempts
         retry_count = state.get("retry_count", 0) + 1
@@ -182,6 +194,7 @@ def guide_node(state: ContextFlowState) -> dict:
         session_history = state.get("session_history", [])
         user_level = state.get("user_level", "intermediate")  # TASK-012: from profile
         memory_context = state.get("memory_context", {})      # TASK-013: from memory_node
+        terminal_context = state.get("terminal_context", {})  # TASK-016: git lives here
 
         # Filter context to only relevant fields for this content type
         from src.utils.parser import parse_context
@@ -190,12 +203,16 @@ def guide_node(state: ContextFlowState) -> dict:
         # Format memory into a string for Guide prompt injection
         memory_str = format_memory_for_guide(memory_context)
 
+        # Extract git context from terminal_context (TASK-016)
+        git_context = terminal_context.get("git", {})
+
         guidance = run_guide(
             filtered_context,
             user_intent,
             session_history,
             user_level,
             memory_str=memory_str,
+            git_context=git_context,
         )
 
         # TASK-013: Store this capture in ChromaDB after successful guide run
