@@ -8,6 +8,7 @@ Each node is a function that:
 LangGraph automatically merges the returned dict into the state.
 """
 
+import os
 import time
 
 from rich.console import Console
@@ -36,13 +37,20 @@ def capture_node(state: ContextFlowState) -> dict:
     Tracks retry_count to prevent infinite loop when confidence stays below 0.6.
     """
     try:
-        # Feature 1: Visible countdown so user knows exactly when to switch tabs
-        for i in range(3, 0, -1):
-            console.print(f"[bold yellow]Capturing in {i}...[/bold yellow]", end="\r")
-            time.sleep(1)
-        console.print("[bold green]Capturing now!         [/bold green]")
+        # TASK-015: Read monitor from environment variable (default: 1)
+        # User sets: export CONTEXTFLOW_MONITOR=2  (or adds to .env)
+        monitor_index = int(os.getenv("CONTEXTFLOW_MONITOR", "1"))
 
-        screen_result = capture_screen(monitor_index=1, resize_to=(1280, 800))
+        # Feature 1: Visible countdown — shows which monitor will be captured
+        for i in range(3, 0, -1):
+            console.print(
+                f"[bold yellow]Capturing in {i}... (monitor {monitor_index})[/bold yellow]",
+                end="\r",
+            )
+            time.sleep(1)
+        console.print("[bold green]Capturing now!                    [/bold green]")
+
+        screen_result = capture_screen(monitor_index=monitor_index, resize_to=(1280, 800))
         terminal_result = capture_terminal_context()
 
         # TASK-016: Capture git context — branch, commits, uncommitted files
