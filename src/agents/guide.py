@@ -212,6 +212,9 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
     # Get prompt template
     prompt_template = GUIDE_PROMPTS[content_type]
 
+    # TASK-017: Build level instruction — adapts Guide's depth to user's actual level
+    level_instruction = _build_level_instruction(user_level)
+
     # Append memory context if available (TASK-013)
     memory_section = f"\n\n{memory_str}" if memory_str else ""
 
@@ -221,8 +224,8 @@ Confidence: {extracted_context.get('confidence', 0.0):.2f}
         from src.capture.git import format_git_for_guide
         git_section = format_git_for_guide(git_context)
 
-    # Fill in template
-    prompt = prompt_template.format(
+    # Fill in template — level instruction prepended so it governs the entire response
+    prompt = level_instruction + "\n\n" + prompt_template.format(
         context=context_str + history_str + memory_section + git_section,
         user_intent=user_intent or "Not specified"
     )
@@ -365,5 +368,60 @@ My level: {user_level}
 Specific question: {intent_line}
 Preferred response: use examples from the actual content above, not generic examples
 === END SNAPSHOT ==="""
-    
+
     return package
+
+
+def _build_level_instruction(user_level: str) -> str:
+    """Build a level-specific instruction prepended to every Guide prompt.
+
+    TASK-017: The Strategy Pattern applied to pedagogy.
+    Same content, three different explanation depths selected at runtime.
+
+    Args:
+        user_level: "beginner", "intermediate", or "advanced"
+                    Defaults to "intermediate" for any unknown value.
+
+    Returns:
+        A short instruction string that governs Guide's vocabulary,
+        depth, and assumed prior knowledge for the entire response.
+
+    Why this goes at the TOP of the prompt:
+        LLMs apply early context as a governing frame. Putting the level
+        instruction before the content means it shapes how Guide reads
+        and responds to everything that follows — not just a footer note.
+    """
+    level = (user_level or "intermediate").strip().lower()
+
+    instructions = {
+        "beginner": (
+            "TEACHING LEVEL: BEGINNER\n"
+            "The user is new to this topic. Follow these rules for your entire response:\n"
+            "- Use plain English. No jargon without immediately explaining it.\n"
+            "- Start every explanation with a real-world analogy before the technical definition.\n"
+            "- Assume zero prior knowledge. Define every term on first use.\n"
+            "- Use short sentences. Break complex ideas into numbered steps.\n"
+            "- End each learning step with: what to do, not what to read."
+        ),
+        "intermediate": (
+            "TEACHING LEVEL: INTERMEDIATE\n"
+            "The user understands the basics. Follow these rules for your entire response:\n"
+            "- Skip foundational definitions. Start from the pattern or concept directly.\n"
+            "- Use technical vocabulary but briefly clarify any ambiguous terms.\n"
+            "- Focus on practical application: how to use this, not just what it is.\n"
+            "- Highlight common mistakes and how to avoid them.\n"
+            "- Connect to broader patterns the user likely already knows."
+        ),
+        "advanced": (
+            "TEACHING LEVEL: ADVANCED\n"
+            "The user has strong technical depth. Follow these rules for your entire response:\n"
+            "- Skip all basics. Go straight to architecture, trade-offs, and edge cases.\n"
+            "- Use precise technical vocabulary. No over-simplification.\n"
+            "- Point to source-level details, performance implications, or design decisions.\n"
+            "- Highlight what most people get wrong about this and why.\n"
+            "- Suggest further depth: related patterns, alternative approaches, known pitfalls."
+        ),
+    }
+
+    # Graceful fallback — unknown level → intermediate, never crash
+    return instructions.get(level, instructions["intermediate"])
