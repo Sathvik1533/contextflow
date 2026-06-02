@@ -20,6 +20,7 @@ from src.capture.screen import capture_screen
 from src.capture.git import capture_git_context
 from src.capture.terminal import capture_terminal_context
 from src.graph.state import ContextFlowState
+from src.output.archive import save_session
 from src.output.cli import copy_to_clipboard, display_guidance, prompt_continue
 from src.utils.logger import get_logger
 
@@ -298,6 +299,12 @@ def output_node(state: ContextFlowState) -> dict:
                 console.print("[yellow]Could not copy to clipboard.[/yellow]")
                 console.print("[dim]Install xclip (Linux) or check pbcopy (macOS)[/dim]")
         
+        # TASK-018: Save session to disk after every capture
+        # This is what makes ContextFlow remember — Pain 2, 5, 6, 7 eliminated
+        saved_path = save_session(state)
+        if saved_path:
+            logger.debug("Session archived: %s", saved_path.name)
+
         # Ask user: Continue or Quit?
         should_continue = prompt_continue()
 
